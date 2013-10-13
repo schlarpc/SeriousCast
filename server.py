@@ -49,8 +49,9 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         template = templates.get_template('playlist.pls')
-        playlist = template.render({'url': 'http://{}:30000/channel/{}'.format(
+        playlist = template.render({'url': 'http://{}:{}/channel/{}'.format(
             cfg.get('SeriousCast', 'hostname'),
+            cfg.get('SeriousCast', 'port'),
             channel_number)})
 
         self.wfile.write(playlist.encode('utf-8'))
@@ -96,6 +97,7 @@ if __name__ == '__main__':
     
     templates = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
     
-    server = SeriousHTTPServer(('0.0.0.0', 30000), SeriousRequestHandler)
+    port = cfg.getint('SeriousCast', 'port')
+    server = SeriousHTTPServer(('0.0.0.0', port), SeriousRequestHandler)
     print('Starting server, use <Ctrl-C> to stop')
     server.serve_forever()
