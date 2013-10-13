@@ -102,6 +102,9 @@ class Sirius():
         By the end of this method, self.key is set to the session AES key and
         self.session_id is set to your session ID
         """
+        self.username = username
+        self.password = password
+
         auth_url = self.config.findall("./consumerConfig/config[@name='AuthenticationBaseUrl']")[0].attrib['value']
 
         auth_request = json.dumps({
@@ -147,16 +150,21 @@ class Sirius():
         Returns a 2-tuple that acts as a stream token
         """
         token_url = self.config.findall("./consumerConfig/config[@name='TokenBaseUrl']")[0].attrib['value']
-        token_response = json.loads(requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + id + '/', params = {
+        resp = json.loads(requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + id + '/', params = {
             'sessionId': self.session_id,
-        }).text)['tokenResponse']
+        }).text)
 
-        token_data = self._decrypt(token_response['tokenData'])
-        length = struct.unpack('<H', token_data[4:6])[0]
-        channel_url, token = re.search('(.+?)\\?token=([a-f0-9_]+)',
-            token_data[6 : 6 + length].decode()).group(1, 2)
-        
-        return (channel_url, token)
+        if 'tokenResponse' in resp:
+            token_response = resp['tokenResponse']
+            token_data = self._decrypt(token_response['tokenData'])
+            length = struct.unpack('<H', token_data[4:6])[0]
+            channel_url, token = re.search('(.+?)\\?token=([a-f0-9_]+)',
+                token_data[6 : 6 + length].decode()).group(1, 2)
+
+            return (channel_url, token)
+        else:
+            self.login(self.username, self.password)
+            return self._channel_token(id)
 
 
     def packet_generator(self, id):

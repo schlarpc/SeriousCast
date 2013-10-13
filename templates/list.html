@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>SeriousCast</title>
+        <style>
+            table, td, th {
+                border: 1px solid black;
+            }
+            table {
+                border-collapse: collapse;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>SeriousCast</h1>
+        <div>
+            SiriusXM radio for normal clients.<br />
+            <b>All streams require something that can play SHOUTcast streams - VLC works well</b>
+        </div>
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Genre</th>
+                <th>Description</th>
+            </tr>
+            {% for channel in channels %}
+            <tr>
+                <td>{{ channel.siriusChannelNo }}</td>
+                <td><a href="/playlist/{{ channel.siriusChannelNo }}">{{ channel.name }}</a></td>
+                <td>{{ channel.genre }}</td>
+                <td>{{ channel.description }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

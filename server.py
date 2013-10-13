@@ -7,6 +7,7 @@ import subprocess
 import re
 import configparser
 
+import jinja2
 import sirius
 
 
@@ -47,12 +48,12 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-disposition', 'attachment; filename={}.pls'.format(channel_number))
         self.end_headers()
 
-        self.wfile.write(b'[playlist]\r\n')
-        self.wfile.write('File1=http://{}:30000/channel/{}'.format(
+        template = templates.get_template('playlist.pls')
+        playlist = template.render({'url': 'http://{}:30000/channel/{}'.format(
             cfg.get('SeriousCast', 'hostname'),
-            channel_number
-        ).encode())
+            channel_number)})
 
+        self.wfile.write(playlist.encode('utf-8'))
         self.wfile.write(b'\r\n\r\n')
 
 
@@ -61,30 +62,10 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
-        html = """
-        <html>
-            <head>
-                <title>SeriousCast</title>
-            </head>
-            <body>
-                <h1>SeriousCast</h1>
-                <b>Streams require something that can play Shoutcast, like VLC</b>
-                <table>{}</table>
-            </body>
-        </html>
-        """
-
-        table = ""
-        for channel_number in sorted(list(sxm.lineup.keys())):
-            channel = sxm.lineup[channel_number]
-            table += '<tr><td><a href="/playlist/{0}">{0}</a></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>'.format(
-                channel_number,
-                channel['name'],
-                channel['genre'],
-                channel['description'],
-            )
-
-        self.wfile.write(html.format(table).encode('utf-8'))
+        template = templates.get_template('list.html')
+        html = template.render({'channels': sorted(sxm.lineup.values(), key=lambda k: k['siriusChannelNo'])})
+        
+        self.wfile.write(html.encode('utf-8'))
         self.wfile.write(b'\r\n\r\n')
 
 
@@ -112,6 +93,8 @@ if __name__ == '__main__':
 
     sxm = sirius.Sirius()
     sxm.login(username, password)
+    
+    templates = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
     
     server = SeriousHTTPServer(('0.0.0.0', 30000), SeriousRequestHandler)
     print('Starting server, use <Ctrl-C> to stop')
