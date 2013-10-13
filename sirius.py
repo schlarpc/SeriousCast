@@ -167,20 +167,30 @@ class Sirius():
         channel_url, token = self._channel_token(id)
 
         hq_url = channel_url + 'HLS_' + id + '_64k/'
-        playlist_url = hq_url + id + '_64k_large.m3u8?token=' + token
-
-        playlist = self._filter_playlist(requests.get(playlist_url).text)
+        playlist_url = hq_url + id + '_64k_large.m3u8'
+        playlist = []
+        entry = None
 
         while True:
+            if len(playlist) < 3:
+                resp = requests.get(playlist_url, params={'token': token})
+                if resp.status_code == 200:
+                    new_entries = self._filter_playlist(resp.text, entry)
+                    playlist += [x for x in new_entries if x not in playlist]
+                else:
+                    print('Expired token, renewing')
+                    channel_url, token = self._channel_token(id)
+
             if len(playlist):
                 entry = playlist.pop(0)
                 print(entry)
 
-                packet = requests.get(hq_url + entry + '?token=' + token).content
-                yield self._decrypt_packet(packet)
+                resp = requests.get(hq_url + entry, params={'token': token})
+                if resp.status_code == 200:
+                    yield self._decrypt_packet(resp.content)
+                else:
+                    playlist.insert(0, entry)
+                    print('Expired token, renewing')
+                    channel_url, token = self._channel_token(id)
             else:
                 time.sleep(10)
-
-            if len(playlist) < 3:
-                new_entries = self._filter_playlist(requests.get(playlist_url).text, entry)
-                playlist += [x for x in new_entries if x not in playlist]
