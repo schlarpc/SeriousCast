@@ -142,7 +142,7 @@ class Sirius():
         self.session_id = auth_result['sessionId']
 
 
-    def channel_token(self, id):
+    def _channel_token(self, id):
         """
         Returns a 2-tuple that acts as a stream token
         """
@@ -159,12 +159,12 @@ class Sirius():
         return (channel_url, token)
 
 
-    def packet_generator(self, id, token):
+    def packet_generator(self, id):
         """
         Generator that produces AAC-HE audio in an MPEG-TS container
         See also: HTTP Live Streaming
         """
-        channel_url, token = token
+        channel_url, token = self._channel_token(id)
 
         hq_url = channel_url + 'HLS_' + id + '_64k/'
         playlist_url = hq_url + id + '_64k_large.m3u8?token=' + token

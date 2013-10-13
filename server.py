@@ -27,9 +27,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
-        token = sxm.channel_token(channel_id)
 
-        for packet in sxm.packet_generator(channel_id, token):
+        for packet in sxm.packet_generator(channel_id):
             command = ['ffmpeg', '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             adts_data = proc.communicate(packet)[0]
