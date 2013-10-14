@@ -7,6 +7,7 @@ into a format appropriate for standard internet radio streaming clients.
 ## Requirements
 
 SeriousCast is written in Python, and more specifically targets Python 3.3.
+
 It has dependencies on:
 * [PyCrypto](https://www.dlitz.net/software/pycrypto/)
 * [Requests](http://docs.python-requests.org/en/latest/)
