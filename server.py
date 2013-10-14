@@ -47,7 +47,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
     def channel_playlist(self, channel_number):
         self.send_response(200)
         self.send_header('Content-type', 'audio/x-scpls')
-        self.send_header('Content-disposition', 'attachment; filename={}.pls'.format(channel_number))
+        self.send_header('Content-disposition', 'attachment; filename="{} - {}.pls"'.format(
+            channel_number, sxm.lineup[channel_number]['name']))
         self.end_headers()
 
         template = templates.get_template('playlist.pls')
