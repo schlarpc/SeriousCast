@@ -20,11 +20,13 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         channel = sxm.lineup[channel_number]
 
         self.protocol_version = 'ICY' # if we don't pretend to be shoutcast, doctors HATE us
-        self.send_response(200)
+        self.log_request(200)
+        self.send_response_only(200)
         self.send_header('Content-type', 'audio/aacp')
         self.send_header('icy-br', '64')
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
+        self.send_header('icy-url', url)
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
@@ -49,9 +51,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         template = templates.get_template('playlist.pls')
-        playlist = template.render({'url': 'http://{}:{}/channel/{}'.format(
-            cfg.get('SeriousCast', 'hostname'),
-            cfg.get('SeriousCast', 'port'),
+        playlist = template.render({'url': url + 'channel/{}'.format(
             channel_number)})
 
         self.wfile.write(playlist.encode('utf-8'))
@@ -91,7 +91,11 @@ if __name__ == '__main__':
     cfg.read('settings.cfg')
     username = cfg.get('SeriousCast', 'username')
     password = cfg.get('SeriousCast', 'password')
-
+    url = 'http://{}:{}/'.format(
+        cfg.get('SeriousCast', 'hostname'),
+        cfg.get('SeriousCast', 'port'),
+    )
+    
     sxm = sirius.Sirius()
     sxm.login(username, password)
     
