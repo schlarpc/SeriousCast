@@ -35,6 +35,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             command = ['ffmpeg', '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             adts_data = proc.communicate(packet)[0]
+            adts_data += b'\0' * (180000 - len(adts_data))
+            print(len(adts_data))
             try:
                 self.wfile.write(adts_data)
             except (ConnectionResetError, ConnectionAbortedError) as e:
