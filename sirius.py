@@ -150,11 +150,12 @@ class Sirius():
         Returns a 2-tuple that acts as a stream token
         """
         token_url = self.config.findall("./consumerConfig/config[@name='TokenBaseUrl']")[0].attrib['value']
-        resp = json.loads(requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + id + '/', params = {
+        resp = requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + id + '/', params = {
             'sessionId': self.session_id,
-        }).text)
+        }).text
 
-        if 'tokenResponse' in resp:
+        resp = json.loads(resp)
+        if 'tokenResponse' in resp and 'tokenData' in resp['tokenResponse']:
             token_response = resp['tokenResponse']
             token_data = self._decrypt(token_response['tokenData'])
             length = struct.unpack('<H', token_data[4:6])[0]
