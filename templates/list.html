@@ -80,7 +80,13 @@
             <div><span class="vlc-section">Now Playing:</span> <span id="vlc-nowplaying"></span></div>
             
             <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
+            
             <button id="vlc-pause">Pause</button>
+            <button id="vlc-mute">Mute</button>
+            <label>
+                Volume
+                <input id="vlc-volume" min="0" max="100" value="100" type="range" />
+            </label>
         </div>
         <div class="box">
             <h2>Channel Listing</h2>
@@ -123,6 +129,14 @@
                 
                 $('#vlc-pause').click(function() {
                     vlc.playlist.togglePause();
+                });
+                
+                $('#vlc-mute').click(function() {
+                    vlc.playlist.toggleMute();
+                });
+                
+                $('#vlc-volume').change(function() {
+                    vlc.audio.volume = parseInt($('#vlc-volume').val(), 10);
                 });
                 
                 setInterval(function() {
