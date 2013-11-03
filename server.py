@@ -80,7 +80,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             stream_title = stream_title.ljust(meta_length * 16).encode('utf-8')
 
             # convert stream from mpeg ts to adts
-            command = ['ffmpeg', '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
+            command = [ffmpeg_path, '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             adts_data = proc.communicate(packet)[0]
             adts_data += b'\0' * (180000 - len(adts_data))
@@ -154,6 +154,7 @@ if __name__ == '__main__':
         cfg.get('SeriousCast', 'hostname'),
         cfg.get('SeriousCast', 'port'),
     )
+    ffmpeg_path = cfg.get('SeriousCast', 'ffmpeg_path')
 
     sxm = sirius.Sirius()
     sxm.login(username, password)
