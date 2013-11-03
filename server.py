@@ -6,6 +6,7 @@ import socket
 import subprocess
 import re
 import configparser
+import struct
 
 import jinja2
 import sirius
@@ -16,6 +17,37 @@ class SeriousHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 
 class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
+    def extract_metadata(self, data):
+        metadata = {'artist': '', 'title': '', 'album': ''}
+    
+        try:
+            while True:
+                # find the start of an MPEG PES
+                idx = data.index(b'\x00\x00\x01')
+                data = data[idx + 3:]
+                
+                # check if the stream id is the siriusxm metadata id, 0xbf
+                if (data[0] == 0xbf):
+                    packet_length, subtype, count = struct.unpack('!xHxxxxBB', data[:9])
+                    data = data[9:]
+                    
+                    # subtype FE is song info
+                    if subtype == 0xfe:
+                        els = []
+                        for i in range(count):
+                            length = data[0]
+                            els.append(data[2 : length + 2])
+                            data = data[length + 2:]
+                        metadata = {
+                            'title': els[0].decode('utf-8'),
+                            'artist': els[1].decode('utf-8'),
+                            'album': els[2].decode('utf-8'),
+                            }
+        except ValueError:
+            pass
+            
+        return metadata
+
     def channel_stream(self, channel_number):
         channel = sxm.lineup[channel_number]
 
@@ -27,18 +59,30 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
         self.send_header('icy-url', url)
+        self.send_header('icy-metaint', '180000')
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
 
         for packet in sxm.packet_generator(channel_id):
+            # extracting metadata from the stream packet
+            metadata = self.extract_metadata(packet)
+            stream_title = '{} - {}'.format(metadata['artist'], metadata['title']).replace("'", '')
+            print(stream_title)
+            stream_title = "StreamTitle='" + stream_title + "';"
+            meta_length = -(-len(stream_title) // 16)
+            stream_title = stream_title.ljust(meta_length * 16).encode('utf-8')
+            
+            # convert stream from mpeg ts to adts
             command = ['ffmpeg', '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             adts_data = proc.communicate(packet)[0]
             adts_data += b'\0' * (180000 - len(adts_data))
-            print(len(adts_data))
+            
             try:
                 self.wfile.write(adts_data)
+                self.wfile.write(bytes((meta_length,)))
+                self.wfile.write(stream_title)
             except (ConnectionResetError, ConnectionAbortedError) as e:
                 print('Connection dropped: ', e)
                 return
