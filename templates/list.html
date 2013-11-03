@@ -125,6 +125,7 @@
                     vlc.playlist.clear();
                     vlc.playlist.add(stream_url);
                     vlc.playlist.play();
+                    return false;
                 });
                 
                 $('#vlc-pause').click(function() {

@@ -65,7 +65,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
         self.send_header('icy-url', url)
-        self.send_header('icy-metaint', '180000')
+        self.send_header('icy-metaint', '45000')
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
@@ -86,9 +86,11 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             adts_data += b'\0' * (180000 - len(adts_data))
 
             try:
-                self.wfile.write(adts_data)
-                self.wfile.write(bytes((meta_length,)))
-                self.wfile.write(stream_title)
+                # we split the packet up a bit so that we can get the metadata out faster
+                for i in range(4):
+                    self.wfile.write(adts_data[(45000 * i) : (45000 * (i + 1))])
+                    self.wfile.write(bytes((meta_length,)))
+                    self.wfile.write(stream_title)
             except (ConnectionResetError, ConnectionAbortedError) as e:
                 print('Connection dropped: ', e)
                 return
