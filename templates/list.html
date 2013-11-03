@@ -4,35 +4,140 @@
         <meta charset="UTF-8">
         <title>SeriousCast</title>
         <style>
-            table, td, th {
-                border: 1px solid black;
+            html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
+        
+            * {
+                box-sizing: border-box;
             }
+            
+            html {
+                font-family: sans-serif;
+                background-color: #94d9ff;
+                
+            }
+            
+            table, td, th {
+                padding: 2px;
+            }
+            
+            th {
+                font-weight: bold;
+            }
+            
             table {
-                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            h1, h2 {
+                color: #6fa3bf;
+            }
+            
+            h1 {
+                font-size: 28px;
+                background-color: #4a6d7f;
+                border-bottom: 1px solid #253640;
+            }
+            
+            h2 {
+                font-size: 16px;
+                color: #4a6d7f;
+                font-weight: bold;
+                border-bottom: 1px solid #253640;
+                margin-bottom: 5px;
+            }
+            
+            .box {
+                border: 1px solid #253640;
+                margin: 20px 20px 0;
+                padding: 5px;
+                border-radius: 5px;
+                line-height: 1.4;
+                background-color: #85c3e5;
+            }
+            
+            a, a:visited {
+                color: #253640;
+            }
+            
+            .vlc-section {
+                font-weight: bold;
+                display: inline-block;
+                min-width: 7em;
             }
         </style>
     </head>
     <body>
         <h1>SeriousCast</h1>
-        <div>
-            SiriusXM radio for normal clients.<br />
-            <b>All streams require something that can play SHOUTcast streams - VLC works well</b>
+        <div id="info" class="box">
+            Welcome to SeriousCast, SiriusXM Internet Radio for normal clients.<br />
+            Streaming requires the VLC plugin for your web browser.<br />
+            Playlist downloads require a SHOUTcast compatible streamer: VLC works well on desktop, XiiaLive works on Android after changing the stream engine to FFmpeg.
         </div>
-        <table>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Genre</th>
-                <th>Description</th>
-            </tr>
-            {% for channel in channels %}
-            <tr>
-                <td>{{ channel.siriusChannelNo }}</td>
-                <td><a href="/playlist/{{ channel.siriusChannelNo }}">{{ channel.name }}</a></td>
-                <td>{{ channel.genre }}</td>
-                <td>{{ channel.description }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+        <div class="box">
+            <h2>Streaming Player</h2>
+            
+            <div><span class="vlc-section">Channel:</span> <span id="vlc-channel"></span></div>
+            <div><span class="vlc-section">Now Playing:</span> <span id="vlc-nowplaying"></span></div>
+            
+            <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
+            <button id="vlc-pause">Pause</button>
+        </div>
+        <div class="box">
+            <h2>Channel Listing</h2>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Genre</th>
+                    <th>Description</th>
+                </tr>
+                {% for channel in channels %}
+                <tr>
+                    <td>
+                        <a class="vlc-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
+                        |
+                        <a href="/playlist/{{ channel.siriusChannelNo }}">Playlist</a>
+                    </td>
+                    <td>{{ channel.siriusChannelNo }}</td>
+                    <td>{{ channel.name }}</a></td>
+                    <td>{{ channel.genre }}</td>
+                    <td>{{ channel.description }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
+        <script>
+            $(function() {
+                var vlc = $('#vlc')[0];
+                
+                $('.vlc-stream').click(function() {
+                    var stream_url = 'http://' + document.location.hostname + ':' + document.location.port + '/channel/' + $(this).data('channel');
+                    console.log(stream_url);
+                    vlc.playlist.stop();
+                    vlc.playlist.clear();
+                    vlc.playlist.add(stream_url);
+                    vlc.playlist.play();
+                });
+                
+                $('#vlc-pause').click(function() {
+                    vlc.playlist.togglePause();
+                });
+                
+                setInterval(function() {
+                    try {
+                        $('#vlc-channel').text(vlc.mediaDescription.title);
+                        
+                        if (vlc.mediaDescription.nowPlaying != null) {
+                            $('#vlc-nowplaying').text(vlc.mediaDescription.nowPlaying);
+                        } else {
+                            $('#vlc-nowplaying').text("Retrieving info...");
+                        }
+                    } catch (ex) {
+                    }
+                }, 1000);
+            });
+        </script>
     </body>
 </html>
