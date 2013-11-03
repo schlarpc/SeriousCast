@@ -6,7 +6,7 @@ $(function() {
     
     function start_stream(stream_url) {
         vlc.playlist.stop();
-        vlc.playlist.clear();
+        vlc.playlist.items.clear();
         vlc.playlist.add(stream_url);
         vlc.playlist.play();
     }
