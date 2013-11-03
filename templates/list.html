@@ -13,7 +13,10 @@
             html {
                 font-family: sans-serif;
                 background-color: #94d9ff;
-                
+            }
+            
+            body {
+                margin-top: 40px;
             }
             
             table, td, th {
@@ -32,10 +35,19 @@
                 color: #6fa3bf;
             }
             
-            h1 {
-                font-size: 28px;
+            header {
                 background-color: #4a6d7f;
                 border-bottom: 1px solid #253640;
+                position: fixed;
+                width: 100%;
+                height: 30px;
+                top: 0;
+                left: 0;
+            }
+            
+            h1 {
+                display: inline-block;
+                font-size: 28px;
             }
             
             h2 {
@@ -62,55 +74,109 @@
             .vlc-section {
                 font-weight: bold;
                 display: inline-block;
-                min-width: 7em;
+                min-width: 6em;
+            }
+            
+            #vlc-channel, #vlc-nowplaying {
+                min-width: 15em;
+                display: inline-block;
+            }
+            
+            #player {
+                width: 75%;
+                height: 100%;
+                float: right;
+                line-height: 29px;
+                padding: 0 10px;
+                text-align: right;
+            }
+            
+            input[type=range] {
+                vertical-align: text-top;
+                -webkit-appearance: none;
+                background-color: #94d9ff;
+                width: 200px;
+                height: 20px;
+                margin-top: -1px;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                background-color: #6fa3bf;
+                width: 10px;
+                height: 22px;
+            }
+            
+            #player-info {
+                text-align: left;
+                display: inline-block;
+                float: left;
+                
+                color: #6fa3bf;
+            }
+            
+            #player-controls {
+                text-align: right;
+                display: inline-block;
+            }
+            
+            #player-controls div {
+                display: inline;
             }
         </style>
     </head>
     <body>
-        <h1>SeriousCast</h1>
+        <header>
+            <div id="player">
+                <div id="player-info">
+                    <span class="vlc-section">Channel:</span> <span id="vlc-channel"></span>
+                    <span class="vlc-section">Now Playing:</span> <span id="vlc-nowplaying"></span>
+                </div>
+            
+                <span id="player-controls">
+                    <button id="vlc-pause" type="button">Pause</button>
+                    <button id="vlc-mute" type="button">Mute</button>
+                    <input id="vlc-volume" min="0" max="100" value="100" type="range" title="Volume" />
+                </span>
+            </div>
+            
+            <h1>SeriousCast</h1>
+        </header>
+        
         <div id="info" class="box">
             Welcome to SeriousCast, SiriusXM Internet Radio for normal clients.<br />
             Streaming requires the VLC plugin for your web browser.<br />
             Playlist downloads require a SHOUTcast compatible streamer: VLC works well on desktop, XiiaLive works on Android after changing the stream engine to FFmpeg.
-        </div>
-        <div class="box">
-            <h2>Streaming Player</h2>
-            
-            <div><span class="vlc-section">Channel:</span> <span id="vlc-channel"></span></div>
-            <div><span class="vlc-section">Now Playing:</span> <span id="vlc-nowplaying"></span></div>
-            
             <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
-            
-            <button id="vlc-pause">Pause</button>
-            <button id="vlc-mute">Mute</button>
-            <label>
-                Volume
-                <input id="vlc-volume" min="0" max="100" value="100" type="range" />
-            </label>
         </div>
+        
         <div class="box">
             <h2>Channel Listing</h2>
             <table>
-                <tr>
-                    <th></th>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Genre</th>
-                    <th>Description</th>
-                </tr>
-                {% for channel in channels %}
-                <tr>
-                    <td>
-                        <a class="vlc-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
-                        |
-                        <a href="/playlist/{{ channel.siriusChannelNo }}">Playlist</a>
-                    </td>
-                    <td>{{ channel.siriusChannelNo }}</td>
-                    <td>{{ channel.name }}</a></td>
-                    <td>{{ channel.genre }}</td>
-                    <td>{{ channel.description }}</td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Genre</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for channel in channels %}
+                    <tr>
+                        <td>
+                            <a class="vlc-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
+                            |
+                            <a href="/playlist/{{ channel.siriusChannelNo }}">Playlist</a>
+                        </td>
+                        <td>{{ channel.siriusChannelNo }}</td>
+                        <td>{{ channel.name }}</a></td>
+                        <td>{{ channel.genre }}</td>
+                        <td>{{ channel.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
@@ -133,7 +199,7 @@
                 });
                 
                 $('#vlc-mute').click(function() {
-                    vlc.playlist.toggleMute();
+                    vlc.audio.toggleMute();
                 });
                 
                 $('#vlc-volume').change(function() {
