@@ -40,7 +40,6 @@
                 border-bottom: 1px solid #253640;
                 position: fixed;
                 width: 100%;
-                height: 30px;
                 top: 0;
                 left: 0;
             }
@@ -48,6 +47,8 @@
             h1 {
                 display: inline-block;
                 font-size: 28px;
+                float: left;
+                min-width: 0;
             }
             
             h2 {
@@ -71,31 +72,37 @@
                 color: #253640;
             }
             
-            .vlc-section {
+            #vlc-channel:before  {
+                content: "Channel: ";
                 font-weight: bold;
-                display: inline-block;
-                min-width: 6em;
+            }
+            
+            #vlc-nowplaying:before {
+                content: "Now Playing: ";
+                font-weight: bold;
             }
             
             #vlc-channel, #vlc-nowplaying {
-                min-width: 15em;
+                width: 25em;
                 display: inline-block;
+                text-align: left;
+                vertical-align: top;
             }
             
             #player {
-                width: 75%;
                 height: 100%;
-                float: right;
                 line-height: 29px;
                 padding: 0 10px;
                 text-align: right;
+                color: #6fa3bf;
+                float: right;
             }
             
             input[type=range] {
                 vertical-align: text-top;
                 -webkit-appearance: none;
                 background-color: #94d9ff;
-                width: 200px;
+                width: 150px;
                 height: 20px;
                 margin-top: -1px;
             }
@@ -107,16 +114,7 @@
                 height: 22px;
             }
             
-            #player-info {
-                text-align: left;
-                display: inline-block;
-                float: left;
-                
-                color: #6fa3bf;
-            }
-            
             #player-controls {
-                text-align: right;
                 display: inline-block;
             }
             
@@ -127,12 +125,12 @@
     </head>
     <body>
         <header>
+            <h1>SeriousCast</h1>
+        
             <div id="player">
-                <div id="player-info">
-                    <span class="vlc-section">Channel:</span> <span id="vlc-channel"></span>
-                    <span class="vlc-section">Now Playing:</span> <span id="vlc-nowplaying"></span>
-                </div>
-            
+                <span id="vlc-channel"></span>
+                <span id="vlc-nowplaying"></span>
+                
                 <span id="player-controls">
                     <button id="vlc-pause" type="button">Pause</button>
                     <button id="vlc-mute" type="button">Mute</button>
@@ -140,7 +138,7 @@
                 </span>
             </div>
             
-            <h1>SeriousCast</h1>
+            
         </header>
         
         <div id="info" class="box">
