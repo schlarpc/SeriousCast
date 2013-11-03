@@ -25,10 +25,6 @@ table {
     width: 100%;
 }
 
-h1, h2 {
-    color: #6fa3bf;
-}
-
 header {
     background-color: #4a6d7f;
     border-bottom: 1px solid #253640;
@@ -37,6 +33,7 @@ header {
     top: 0;
     left: 0;
     min-height: 30px;
+    color: white;
 }
 
 h1 {
@@ -47,6 +44,7 @@ h1 {
 }
 
 h2 {
+    color: #6fa3bf;
     font-size: 16px;
     color: #4a6d7f;
     font-weight: bold;
@@ -92,7 +90,6 @@ a, a:visited {
     line-height: 29px;
     padding: 0 10px;
     text-align: right;
-    color: #6fa3bf;
     float: right;
 }
 
