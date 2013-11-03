@@ -7,6 +7,8 @@ import subprocess
 import re
 import configparser
 import struct
+import os
+import mimetypes
 
 import jinja2
 import sirius
@@ -54,7 +56,21 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_response_only(response_code)
 
 
+    def send_standard_headers(self, content_length, headers=None, response_code=200):
+        self.protocol_version = 'HTTP/1.1'
+        self.send_response_and_log(response_code)
+        self.send_header('Connection', 'close')
+        self.send_header('Content-length', content_length)
+
+        if headers != None:
+            for field_name, field_value in headers.items():
+                self.send_header(field_name, field_value)
+
+        self.end_headers()
+
+
     def channel_stream(self, channel_number):
+        channel_number = int(channel_number)
         channel = sxm.lineup[channel_number]
 
         self.protocol_version = 'ICY' # if we don't pretend to be shoutcast, doctors HATE us
@@ -97,6 +113,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
 
 
     def channel_playlist(self, channel_number):
+        channel_number = int(channel_number)
+
         template = templates.get_template('playlist.pls')
         playlist = template.render({'url': url + 'channel/{}'.format(
             channel_number)})
@@ -105,13 +123,10 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         filename = '{} - {}.pls'.format(channel_number, sxm.lineup[channel_number]['name'])
         filename = filename.encode('ascii', 'ignore').decode().replace(' ', '_')
 
-        self.protocol_version = 'HTTP/1.1'
-        self.send_response_and_log(200)
-        self.send_header('Content-type', 'audio/x-scpls')
-        self.send_header('Content-disposition', 'attachment; filename="{}"'.format(filename))
-        self.send_header('Content-length', len(response))
-        self.send_header('Connection', 'close')
-        self.end_headers()
+        self.send_standard_headers(len(response), {
+            'Content-type': 'audio/x-scpls',
+            'Content-disposition': 'attachment; filename="{}"'.format(filename),
+        })
 
         self.wfile.write(response)
 
@@ -121,28 +136,61 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         html = template.render({'channels': sorted(sxm.lineup.values(), key=lambda k: k['siriusChannelNo'])})
         response = html.encode('utf-8')
 
-        self.protocol_version = 'HTTP/1.1'
-        self.send_response_and_log(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_header('Content-length', len(response))
-        self.send_header('Connection', 'close')
-        self.end_headers()
+        self.send_standard_headers(len(response), {
+            'Content-type': 'text/html; charset=utf-8',
+        })
 
         self.wfile.write(response)
 
 
+    def file_not_found(self):
+        template = templates.get_template('404.html')
+        html = template.render()
+        response = html.encode('utf-8')
+
+        self.send_standard_headers(len(response), {
+            'Content-type': 'text/html; charset=utf-8',
+        }, response_code=404)
+
+        self.wfile.write(response)
+
+
+    def static_file(self, path):
+        # we'll collapse .. and such and follow symlinks to make sure
+        # we're staying inside of ./static/
+        full_path = os.path.realpath(os.path.join("./static/", path))
+
+        if full_path.startswith(os.path.realpath("./static/")):
+            # if a better mime type than octet-stream is available, use it
+            content_type = 'appllication/octet-stream'
+            extension = os.path.splitext(full_path)[1]
+            if extension in mimetypes.types_map:
+                content_type = mimetypes.types_map[extension]
+
+            with open(full_path, 'rb') as f:
+                content = f.read()
+                self.send_standard_headers(len(content), {
+                    'Content-type': content_type,
+                })
+                self.wfile.write(content)
+        else:
+            self.file_not_found()
+
+
     def do_GET(self):
-        match = re.search('^/channel/([0-9]+)$', self.path)
-        if match:
-            channel_number = int(match.group(1))
-            return self.channel_stream(channel_number)
+        routes = (
+            (r'^/$', self.index),
+            (r'^/static/(?P<path>.+)$', self.static_file),
+            (r'^/channel/(?P<channel_number>[0-9]+)$', self.channel_stream),
+            (r'^/playlist/(?P<channel_number>[0-9]+)$', self.channel_playlist),
+        )
 
-        match = re.search('^/playlist/([0-9]+)$', self.path)
-        if match:
-            channel_number = int(match.group(1))
-            return self.channel_playlist(channel_number)
+        for route_path, route_handler in routes:
+            match = re.search(route_path, self.path)
+            if match:
+                return route_handler(**match.groupdict())
 
-        self.index()
+        self.file_not_found()
 
 
 if __name__ == '__main__':
