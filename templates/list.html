@@ -10,13 +10,14 @@
             <h1>SeriousCast</h1>
         
             <div id="player">
-                <span id="vlc-channel"></span>
-                <span id="vlc-nowplaying"></span>
+                <span id="player-channel"></span>
+                <span id="player-nowplaying"></span>
                 
                 <span id="player-controls">
-                    <button id="vlc-pause" type="button">Pause</button>
-                    <button id="vlc-mute" type="button">Mute</button>
-                    <input id="vlc-volume" min="0" max="100" value="100" type="range" title="Volume" />
+                    <button id="player-rewind" type="button">Rewind</button>
+                    <button id="player-pause" type="button">Pause</button>
+                    <button id="player-mute" type="button">Mute</button>
+                    <input id="player-volume" min="0" max="100" value="100" type="range" title="Volume" />
                 </span>
             </div>
         </header>
@@ -44,7 +45,7 @@
                     {% for channel in channels %}
                     <tr>
                         <td>
-                            <a class="vlc-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
+                            <a class="player-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
                             &bullet;
                             <a href="/playlist/{{ channel.siriusChannelNo }}">Playlist</a>
                         </td>

@@ -1,45 +1,64 @@
+var current_channel = undefined;
+
 $(function() {
     var vlc = $('#vlc')[0];
+    var url_base = 'http://' + document.location.hostname + ':' + document.location.port;
+    
+    function start_stream(stream_url) {
+        vlc.playlist.stop();
+        vlc.playlist.clear();
+        vlc.playlist.add(stream_url);
+        vlc.playlist.play();
+    }
     
     if (vlc.playlist === undefined) {
-        $('#player, .vlc-stream').remove();
+        $('#player, .player-stream').remove();
         $('header').css('position', 'static');
         $('h1').css('float', 'none');
         $('body').css('margin-top', '0');
         $('#player-loaded').text('VLC plugin not found, streaming not enabled.');
     }
     
-    $('.vlc-stream').click(function() {
-        var stream_url = 'http://' + document.location.hostname + ':' + document.location.port + '/channel/' + $(this).data('channel');
-        console.log(stream_url);
-        vlc.playlist.stop();
-        vlc.playlist.clear();
-        vlc.playlist.add(stream_url);
-        vlc.playlist.play();
+    $('.player-stream').click(function() {
+        current_channel = $(this).data('channel');
+        start_stream(url_base + '/channel/' + current_channel);
         return false;
     });
     
-    $('#vlc-pause').click(function() {
+    $('#player-pause').click(function() {
         vlc.playlist.togglePause();
     });
     
-    $('#vlc-mute').click(function() {
+    $('#player-mute').click(function() {
         vlc.audio.toggleMute();
     });
     
-    $('#vlc-volume').change(function() {
-        vlc.audio.volume = parseInt($('#vlc-volume').val(), 10);
+    $('#player-volume').change(function() {
+        vlc.audio.volume = parseInt($('#player-volume').val(), 10);
+    });
+    
+    $('#player-rewind').click(function() {
+        if (current_channel === undefined) {
+            alert('Nothing is playing!');
+        } else {
+            var minutes = parseInt(prompt('Rewind how many minutes?'), 10);
+            if (isNaN(minutes)) {
+                alert('Invalid input.');
+            } else {
+                start_stream(url_base + '/channel/' + current_channel + '/' + minutes);
+            }
+        }
     });
     
     setInterval(function() {
         try {
-            $('#vlc-channel').text(vlc.mediaDescription.title);
+            $('#player-channel').text(vlc.mediaDescription.title);
             
             if (vlc.mediaDescription.nowPlaying != null) {
-                $('#vlc-nowplaying').text(vlc.mediaDescription.nowPlaying);
+                $('#player-nowplaying').text(vlc.mediaDescription.nowPlaying);
                 $('title').text(vlc.mediaDescription.title + ' :: ' + vlc.mediaDescription.nowPlaying);
             } else {
-                $('#vlc-nowplaying').text("Retrieving info...");
+                $('#player-nowplaying').text("Retrieving info...");
             }
         } catch (ex) {
         }

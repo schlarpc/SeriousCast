@@ -52,15 +52,15 @@ class Sirius():
         return cipher.decrypt(data[16:])
 
 
-    def _filter_playlist(self, playlist, last=None):
+    def _filter_playlist(self, playlist, last=None, rewind=0):
         """
         Gets new items from a playlist, optionally given a resume point
-        Returns at most 10 items
+        Rewind specifies a number of minutes to go back in history
         """
         playlist = [x.strip() for x in playlist.splitlines() if not x[0] == '#']
         if last and last in playlist:
-            playlist = playlist[playlist.index(last) + 1:]
-        return playlist[-10:]
+            return playlist[playlist.index(last) + 1:]
+        return playlist[-(10 + 3 * rewind):]
 
 
     def _parse_lineup(self, lineup):
@@ -168,10 +168,11 @@ class Sirius():
             return self._channel_token(id)
 
 
-    def packet_generator(self, id):
+    def packet_generator(self, id, rewind=0):
         """
         Generator that produces AAC-HE audio in an MPEG-TS container
         See also: HTTP Live Streaming
+        Rewind specifies a number of minutes to go back in history
         """
         channel_url, token = self._channel_token(id)
 
@@ -184,7 +185,7 @@ class Sirius():
             if len(playlist) < 3:
                 resp = requests.get(playlist_url, params={'token': token})
                 if resp.status_code == 200:
-                    new_entries = self._filter_playlist(resp.text, entry)
+                    new_entries = self._filter_playlist(resp.text, entry, rewind)
                     playlist += [x for x in new_entries if x not in playlist]
                 else:
                     print('Expired token, renewing')

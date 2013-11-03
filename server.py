@@ -69,8 +69,10 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
 
-    def channel_stream(self, channel_number):
+    def channel_stream(self, channel_number, rewind=0):
         channel_number = int(channel_number)
+        rewind = int(rewind)
+
         channel = sxm.lineup[channel_number]
 
         self.protocol_version = 'ICY' # if we don't pretend to be shoutcast, doctors HATE us
@@ -86,7 +88,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
 
         channel_id = str(channel['channelKey'])
 
-        for packet in sxm.packet_generator(channel_id):
+        for packet in sxm.packet_generator(channel_id, rewind):
             # extracting metadata from the stream packet
             metadata = self.extract_metadata(packet)
             stream_title = '{} - {}'.format(metadata['artist'], metadata['title']).replace("'", '')
@@ -182,6 +184,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             (r'^/$', self.index),
             (r'^/static/(?P<path>.+)$', self.static_file),
             (r'^/channel/(?P<channel_number>[0-9]+)$', self.channel_stream),
+            (r'^/channel/(?P<channel_number>[0-9]+)/(?P<rewind>[0-9]+)$', self.channel_stream),
             (r'^/playlist/(?P<channel_number>[0-9]+)$', self.channel_playlist),
         )
 

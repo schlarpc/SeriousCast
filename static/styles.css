@@ -67,17 +67,17 @@ a, a:visited {
     color: #253640;
 }
 
-#vlc-channel:before  {
+#player-channel:before  {
     content: "Channel: ";
     font-weight: bold;
 }
 
-#vlc-nowplaying:before {
+#player-nowplaying:before {
     content: "Now Playing: ";
     font-weight: bold;
 }
 
-#vlc-channel, #vlc-nowplaying {
+#player-channel, #player-nowplaying {
     width: 25em;
     display: inline-block;
     text-align: left;
