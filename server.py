@@ -19,18 +19,18 @@ class SeriousHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
     def extract_metadata(self, data):
         metadata = {'artist': '', 'title': '', 'album': ''}
-    
+
         try:
             while True:
                 # find the start of an MPEG PES
                 idx = data.index(b'\x00\x00\x01')
                 data = data[idx + 3:]
-                
+
                 # check if the stream id is the siriusxm metadata id, 0xbf
                 if (data[0] == 0xbf):
                     packet_length, subtype, count = struct.unpack('!xHxxxxBB', data[:9])
                     data = data[9:]
-                    
+
                     # subtype FE is song info
                     if subtype == 0xfe:
                         els = []
@@ -45,8 +45,14 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             }
         except ValueError:
             pass
-            
+
         return metadata
+
+
+    def send_response_and_log(self, response_code):
+        self.log_request(response_code)
+        self.send_response_only(response_code)
+
 
     def channel_stream(self, channel_number):
         channel = sxm.lineup[channel_number]
@@ -72,13 +78,13 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             stream_title = "StreamTitle='" + stream_title + "';"
             meta_length = -(-len(stream_title) // 16)
             stream_title = stream_title.ljust(meta_length * 16).encode('utf-8')
-            
+
             # convert stream from mpeg ts to adts
             command = ['ffmpeg', '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             adts_data = proc.communicate(packet)[0]
             adts_data += b'\0' * (180000 - len(adts_data))
-            
+
             try:
                 self.wfile.write(adts_data)
                 self.wfile.write(bytes((meta_length,)))
@@ -87,34 +93,40 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                 print('Connection dropped: ', e)
                 return
 
-        self.wfile.write(b'\r\n\r\n')
-
 
     def channel_playlist(self, channel_number):
-        self.send_response(200)
-        self.send_header('Content-type', 'audio/x-scpls')
-        self.send_header('Content-disposition', 'attachment; filename="{} - {}.pls"'.format(
-            channel_number, sxm.lineup[channel_number]['name']))
-        self.end_headers()
-
         template = templates.get_template('playlist.pls')
         playlist = template.render({'url': url + 'channel/{}'.format(
             channel_number)})
+        response = playlist.encode('utf-8')
 
-        self.wfile.write(playlist.encode('utf-8'))
-        self.wfile.write(b'\r\n\r\n')
+        filename = '{} - {}.pls'.format(channel_number, sxm.lineup[channel_number]['name'])
+        filename = filename.encode('ascii', 'ignore').decode().replace(' ', '_')
+
+        self.protocol_version = 'HTTP/1.1'
+        self.send_response_and_log(200)
+        self.send_header('Content-type', 'audio/x-scpls')
+        self.send_header('Content-disposition', 'attachment; filename="{}"'.format(filename))
+        self.send_header('Content-length', len(response))
+        self.send_header('Connection', 'close')
+        self.end_headers()
+
+        self.wfile.write(response)
 
 
     def index(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.end_headers()
-
         template = templates.get_template('list.html')
         html = template.render({'channels': sorted(sxm.lineup.values(), key=lambda k: k['siriusChannelNo'])})
-        
-        self.wfile.write(html.encode('utf-8'))
-        self.wfile.write(b'\r\n\r\n')
+        response = html.encode('utf-8')
+
+        self.protocol_version = 'HTTP/1.1'
+        self.send_response_and_log(200)
+        self.send_header('Content-type', 'text/html; charset=utf-8')
+        self.send_header('Content-length', len(response))
+        self.send_header('Connection', 'close')
+        self.end_headers()
+
+        self.wfile.write(response)
 
 
     def do_GET(self):
@@ -133,7 +145,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     print('Setting up, please wait')
-    
+
     cfg = configparser.ConfigParser()
     cfg.read('settings.cfg')
     username = cfg.get('SeriousCast', 'username')
@@ -142,12 +154,12 @@ if __name__ == '__main__':
         cfg.get('SeriousCast', 'hostname'),
         cfg.get('SeriousCast', 'port'),
     )
-    
+
     sxm = sirius.Sirius()
     sxm.login(username, password)
-    
+
     templates = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
-    
+
     port = cfg.getint('SeriousCast', 'port')
     server = SeriousHTTPServer(('0.0.0.0', port), SeriousRequestHandler)
     print('Starting server, use <Ctrl-C> to stop')
