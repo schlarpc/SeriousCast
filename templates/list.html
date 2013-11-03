@@ -87,6 +87,9 @@
                 display: inline-block;
                 text-align: left;
                 vertical-align: top;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
             }
             
             #player {
@@ -210,6 +213,7 @@
                         
                         if (vlc.mediaDescription.nowPlaying != null) {
                             $('#vlc-nowplaying').text(vlc.mediaDescription.nowPlaying);
+                            $('title').text(vlc.mediaDescription.title + ' :: ' + vlc.mediaDescription.nowPlaying);
                         } else {
                             $('#vlc-nowplaying').text("Retrieving info...");
                         }
