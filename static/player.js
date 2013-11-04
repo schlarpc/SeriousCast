@@ -1,9 +1,10 @@
-var current_channel = undefined;
+
 
 $(function() {
     var vlc = $('#vlc')[0];
     var url_base = 'http://' + document.location.hostname + ':' + document.location.port;
     var offset = 0;
+    var current_channel = undefined;
     
     function start_stream(stream_url) {
         vlc.playlist.stop();
@@ -16,6 +17,7 @@ $(function() {
         $('#player-channel').text(channel);
         $('#player-nowplaying').text(now_playing);
         $('body').css('margin-top', '80px');
+        $('title').text(now_playing);
     }
     
     if (vlc.playlist === undefined) {
@@ -28,7 +30,7 @@ $(function() {
     
     $('.player-stream').click(function() {
         current_channel = $(this).data('channel');
-        start_stream(url_base + '/channel/' + current_channel);
+        start_stream(url_base + '/channel/' + current_channel + '/' + offset);
         return false;
     });
     
@@ -55,7 +57,15 @@ $(function() {
     });
     
     $('#player-rewind').mouseup(function() {
-        start_stream(url_base + '/channel/' + current_channel + '/' + offset);
+        if (current_channel !== undefined) {
+            start_stream(url_base + '/channel/' + current_channel + '/' + offset);
+        }
+    });
+    
+    $('#player-rewind-status').click(function() {
+        $('#player-rewind').val(300);
+        $('#player-rewind').change();
+        $('#player-rewind').mouseup();
     });
     
     setInterval(function() {
