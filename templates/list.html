@@ -10,15 +10,20 @@
             <h1>SeriousCast</h1>
         
             <div id="player">
+                <span id="player-controls">
+                    <button id="player-pause" type="button" title="Toggle Pause">P</button>
+                    
+                    <button id="player-rewind-status" type="button">Live</button><!--
+                    --><input id="player-rewind" min="0" max="300" value="300" type="range" title="Rewind" />
+
+                    <button id="player-mute" type="button" title="Toggle Mute">M</button><!--
+                    --><input id="player-volume" min="0" max="100" value="100" type="range" title="Volume" />
+                </span>
+            </div>
+            
+            <div id="metadata">
                 <span id="player-channel"></span>
                 <span id="player-nowplaying"></span>
-                
-                <span id="player-controls">
-                    <button id="player-rewind" type="button">Rewind</button>
-                    <button id="player-pause" type="button">Pause</button>
-                    <button id="player-mute" type="button">Mute</button>
-                    <input id="player-volume" min="0" max="100" value="100" type="range" title="Volume" />
-                </span>
             </div>
         </header>
         
