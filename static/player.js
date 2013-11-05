@@ -48,6 +48,11 @@ $(function() {
     });
     
     $('.volume img').click(function() {
+        if (vlc.audio.mute) {
+            $(this).attr('src','static/img/volume-high.svg');
+        } else {
+            $(this).attr('src','static/img/volume-mute.svg');
+        }
         vlc.audio.toggleMute();
     });
     
