@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <title>SeriousCast</title>
-  <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Oxygen:400,700,300|Open+Sans:300italic,400italic,400,300,700|Open+Sans+Condensed:300,300italic' type='text/css'>
+  <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,400,300,700' type='text/css'>
   <link rel="stylesheet" href="http://i.icomoon.io/public/temp/20eb542af2/UntitledProject1/style.css">
   <link rel="stylesheet" href="/static/reset.css" type="text/css">
   <link rel="stylesheet" href="/static/styles.css" type="text/css">
@@ -13,12 +13,12 @@
  		<h1>SeriousCast</h1>
 
  		<nav>
- 			<!--<img src="/static/img/cog.svg" />-->
- 			<img src="/static/img/info.svg" />
+ 			<!-- Future Features <img src="/static/img/cog.svg" />-->
+ 			<img id="infobutton" src="/static/img/info.svg" />
  		</nav>
  	</header>
   	<section class="main">
-      <!--
+      <!-- Future Features
   		<h2>Favorite Channels</h2>
   		<table>
   			<thead>
@@ -42,54 +42,6 @@
                     <td class="genre">Pop</td>
                     <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
                 </tr>
-
-                
-                <tr>
-                	<td class="channel">123</td>
-                    <td>
-                        <img src="/static/img/plays.svg" />
-                        <img src="/static/img/download.svg" />
-                    </td>
-                    <td class="name">SiriusXM Hits 1</a></td>
-                    <td class="genre">Pop</td>
-                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
-                </tr>
-
-                
-                <tr>
-                	<td class="channel">2</td>
-                    <td>
-                        <img src="/static/img/plays.svg" />
-                        <img src="/static/img/download.svg" />
-                    </td>
-                    <td class="name">SiriusXM Hits 1</a></td>
-                    <td class="genre">Pop</td>
-                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
-                </tr>
-
-                
-                <tr>
-                	<td class="channel">2</td>
-                    <td>
-                        <img src="/static/img/plays.svg" />
-                        <img src="/static/img/download.svg" />
-                    </td>
-                    <td class="name">SiriusXM Hits 1</a></td>
-                    <td class="genre">Pop</td>
-                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
-                </tr>
-
-                
-                <tr>
-                	<td class="channel">2</td>
-                    <td>
-                        <img src="/static/img/plays.svg" />
-                        <img src="/static/img/download.svg" />
-                    </td>
-                    <td class="name">SiriusXM Hits 1</a></td>
-                    <td class="genre">Pop</td>
-                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
-                </tr>
             </tbody>
         </table>
       -->
@@ -109,8 +61,8 @@
                 <tr>
                 	<td class="channel">{{ channel.siriusChannelNo }}</td>
                     <td class="button">
-                        <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}"><img src="/static/img/plays.svg" /></a>
-                        <a href="/playlist/{{ channel.siriusChannelNo }}"><img src="/static/img/download.svg" /></a>
+                        <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" /></a>
+                        <a href="/playlist/{{ channel.siriusChannelNo }}" title="Download"><img src="/static/img/download.svg" /></a>
                     </td>
                     <td class="name">{{ channel.name }}</a></td>
                     <td class="genre">{{ channel.genre }}</td>
@@ -126,16 +78,26 @@
   		</div>
   		<div class="volume">
   			<img src="/static/img/volume-high.svg" />
-  			<br>
+  			<br />
   			<input type="range" id="player-volume" min="1" max="100" value="100">
   		</div>
   		<div class="currentinfo">
   			<h3>Alt Nation</h3>
   			<h4>Tame Impala - Elephant</h4>
-  			<span id="time">Live</span><input type="range" id="player-rewind" min="1" max="300" value="300">
+  			<span id="time">Live</span>
+        <br /><input type="range" id="player-rewind" min="1" max="300" value="300">
   		</div>
 
   	</section>
+
+    <div class="info">
+      <p>
+        Welcome to SeriousCast, SiriusXM Internet Radio for normal clients.<br /><br />
+        Streaming requires the VLC plugin for your web browser. <span id="player-loaded"></span><br /><br />
+        Playlist downloads require a SHOUTcast compatible streamer: VLC works well on desktop, XiiaLive works on Android after changing the stream engine to FFmpeg.<br /><br />
+        Project available on <a href="https://github.com/schlarpc/SeriousCast">github.</a>
+      </p>
+    </div>
     <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
     <script src="/static/player.js"></script>

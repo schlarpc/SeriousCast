@@ -56,9 +56,7 @@ table {
     width: calc(100% - 60px);
     margin-bottom: 30px;
 }
-#channels {
-    margin-bottom: 98px;
-}
+
 tr {
     height: 38px;
     line-height: 28px;
@@ -87,7 +85,7 @@ th {
 .button {
     width: 40px;
 }
-.desc {
+.desc, .genre {
     font-size: .8em;
 }
 
@@ -144,6 +142,23 @@ th {
 .currentinfo #time {
     display: inline-block;
     font-size: 12px;
-    width: 40px;
+    cursor: pointer;
+}
 
+
+/* Info */
+.info {
+    position: fixed;
+    top: 30px;
+    right: 28px;
+    width: 250px;
+    background-color: #FFF;
+    border: 2px solid #008fd5;
+    z-index: 999;
+    font-size: .8em;
+    padding: 10px;
+    display: none;
+}
+#infobutton {
+    cursor: pointer;
 }
