@@ -83,7 +83,7 @@ th {
 
 }
 .button {
-    width: 62px;
+    width: 40px;
 }
 .desc, .genre {
     font-size: .8em;
@@ -197,18 +197,4 @@ th {
     clip: rect(600px,calc(100% + 12px),690px,12px);
     margin-left: -12px;
 
-}
-
-
-
-
-/* Favorite channel table */
-#favchannels, #favhead, #favsingle {
-    display: none;
-}
-#favchannels {
-    margin-top: 8px;
-}
-#favchannels tr {
-    background-color: #c7e7fc;
 }

@@ -1,17 +1,10 @@
 
-var favorites = $.cookie('favorites');
+
 $(function() {
     var vlc = $('#vlc')[0];
     var url_base = 'http://' + document.location.hostname + ':' + document.location.port;
     var offset = 0;
     var current_channel = undefined;
-    
-    if (favorites != undefined) {
-        favorites = unescape(favorites).split(',');
-    } else {
-        favorites = Array();
-    }
-    rebuild_favorites();
     
     function start_stream(stream_url) {
         vlc.playlist.stop();
@@ -29,6 +22,8 @@ $(function() {
     }
 
     function change_art(title) {
+        console.log(title);
+        console.log("https://itunes.apple.com/search?term="+encodeURI(title.replace( /[^a-zA-Z]/g, " ")));
         $.ajax({
             url: "https://itunes.apple.com/search?term="+encodeURI(title.replace( /[^a-zA-Z]/g, " ")),
             dataType: 'JSONP'
@@ -46,44 +41,7 @@ $(function() {
                 $('.playpause').css('background-image','none');
                 $('#buylink').hide();
             }
-        });
-    }
-
-    function add_favorite(channel) {
-        if (favorites.indexOf(String(channel)) == -1) {
-            favorites.push(String(channel));
-            put_favorites();
-        }
-    }
-
-    function remove_favorite(channel) {
-        if (favorites.indexOf(String(channel)) != -1) {
-            favorites.splice(favorites.indexOf(String(channel)),1);
-            put_favorites();
-        }
-    }
-
-    function put_favorites() {
-        $.cookie('favorites', escape(favorites.join(',')), { expires: 9999 });
-        rebuild_favorites();
-    }
-
-    function rebuild_favorites() {
-        favorites.splice(favorites.indexOf(''),1);
-        if (favorites.length > 0) {
-            $('#favhead').show();
-            $('#favchannels').show();
-            $('.favsingle').hide();
-            $('.favsingle').each(function(index) {
-                if (favorites.indexOf(String($(this).data('channel'))) != -1) {
-                    $(this).show();
-                }
-            });
-        } else {
-            $('#favhead').hide();
-            $('#favchannels').hide();
-        }
-        
+        })
     }
     
     if (vlc.playlist === undefined) {
@@ -110,14 +68,6 @@ $(function() {
         }
         console.log(vlc.audio.volume);
         vlc.playlist.togglePause();
-    });
-
-    $('.channel-add').click(function() {
-        add_favorite($(this).data('channel'));
-    });
-
-    $('.channel-remove').click(function() {
-        remove_favorite($(this).data('channel'));
     });
     
     $('.volume img').click(function() {
