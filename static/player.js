@@ -31,13 +31,13 @@ $(function() {
         .done(function(data) {
             if (data['resultCount'] != 0) {
                 var smallart = data['results'][0]['artworkUrl60'];
-                var bigart = smallart.replace("60x60-50","1200x1200-75");
+                var bigart = smallart.replace("60x60-50","600x600-75");
                 $('.art').css('background-image',"url('"+bigart+"')");
                 $('.playpause').css('background-image',"url('"+smallart+"')");
                 $('#buylink').show();
                 $('#buylink').attr('href',data['results'][0]['trackViewUrl']);
             } else {
-                $('.art').css('background-image',"url('http://a4.mzstatic.com/us/r30/Music/v4/04/15/78/04157815-169d-9f91-d596-342dee2f4c46/UMG_cvrart_00602537150120_01_RGB72_1200x1200_12UMGIM46901.1200x1200-75.jpg')");
+                $('.art').css('background-image',"url('http://a4.mzstatic.com/us/r30/Music/v4/04/15/78/04157815-169d-9f91-d596-342dee2f4c46/UMG_cvrart_00602537150120_01_RGB72_1200x1200_12UMGIM46901.600x600-75.jpg')");
                 $('.playpause').css('background-image','none');
                 $('#buylink').hide();
             }
