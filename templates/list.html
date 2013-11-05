@@ -13,11 +13,12 @@
  		<h1>SeriousCast</h1>
 
  		<nav>
- 			<img src="/static/img/cog.svg" />
+ 			<!--<img src="/static/img/cog.svg" />-->
  			<img src="/static/img/info.svg" />
  		</nav>
  	</header>
   	<section class="main">
+      <!--
   		<h2>Favorite Channels</h2>
   		<table>
   			<thead>
@@ -91,7 +92,7 @@
                 </tr>
             </tbody>
         </table>
-
+      -->
   		<h2>Channels</h2>
   		<table id="channels">
   			<thead>
@@ -107,9 +108,9 @@
                 {% for channel in channels %}
                 <tr>
                 	<td class="channel">{{ channel.siriusChannelNo }}</td>
-                    <td>
+                    <td class="button">
                         <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}"><img src="/static/img/plays.svg" /></a>
-                        <a href="#"><img src="/static/img/download.svg" /></a>
+                        <a href="/playlist/{{ channel.siriusChannelNo }}"><img src="/static/img/download.svg" /></a>
                     </td>
                     <td class="name">{{ channel.name }}</a></td>
                     <td class="genre">{{ channel.genre }}</td>
@@ -126,12 +127,12 @@
   		<div class="volume">
   			<img src="/static/img/volume-high.svg" />
   			<br>
-  			<input type="range" name="skip" min="1" max="50" value="50">
+  			<input type="range" id="player-volume" min="1" max="100" value="100">
   		</div>
   		<div class="currentinfo">
   			<h3>Alt Nation</h3>
   			<h4>Tame Impala - Elephant</h4>
-  			<span id="time">Live</span><input type="range" name="skip" min="1" max="300" value="300">
+  			<span id="time">Live</span><input type="range" id="player-rewind" min="1" max="300" value="300">
   		</div>
 
   	</section>
