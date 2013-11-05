@@ -14,7 +14,7 @@
 
  		<nav>
  			<!-- Future Features <img src="/static/img/cog.svg" />-->
- 			<img id="infobutton" src="/static/img/info.svg" />
+ 			<img id="infobutton" src="/static/img/info.svg" alt="info"/>
  		</nav>
  	</header>
   	<section class="main">
@@ -61,10 +61,10 @@
                 <tr>
                 	<td class="channel">{{ channel.siriusChannelNo }}</td>
                     <td class="button">
-                        <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" /></a>
-                        <a href="/playlist/{{ channel.siriusChannelNo }}" title="Download"><img src="/static/img/download.svg" /></a>
+                        <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" alt="play" /></a>
+                        <a href="/playlist/{{ channel.siriusChannelNo }}" title="Download"><img src="/static/img/download.svg" alt="download" /></a>
                     </td>
-                    <td class="name">{{ channel.name }}</a></td>
+                    <td class="name">{{ channel.name }}</td>
                     <td class="genre">{{ channel.genre }}</td>
                     <td class="desc">{{ channel.description }}</td>
                 </tr>
@@ -74,10 +74,10 @@
   	</section>
   	<section class="controls">
   		<div class="playpause">
-        <img src="/static/img/pause.svg" />
+        <img src="/static/img/pause.svg" alt="pausecontrol"/>
   		</div>
   		<div class="volume">
-  			<img src="/static/img/volume-high.svg" />
+  			<img src="/static/img/volume-high.svg" alt="mutecontrol"/>
   			<br />
   			<input type="range" id="player-volume" min="1" max="100" value="100">
   		</div>
