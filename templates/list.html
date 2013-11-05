@@ -1,69 +1,142 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>SeriousCast</title>
-        <link rel="stylesheet" href="/static/styles.css" />
-    </head>
-    <body>
-        <header>
-            <h1>SeriousCast</h1>
-        
-            <div id="player">
-                <span id="player-controls">
-                    <button id="player-pause" type="button" title="Toggle Pause">P</button>
-                    
-                    <button id="player-rewind-status" type="button" title="Jump to Live">Live</button><!--
-                    --><input id="player-rewind" min="0" max="300" value="300" type="range" title="Rewind" />
+ <head>
+  <meta charset="UTF-8">
+  <title>SeriousCast</title>
+  <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Oxygen:400,700,300|Open+Sans:300italic,400italic,400,300,700|Open+Sans+Condensed:300,300italic' type='text/css'>
+  <link rel="stylesheet" href="http://i.icomoon.io/public/temp/20eb542af2/UntitledProject1/style.css">
+  <link rel="stylesheet" href="/static/reset.css" type="text/css">
+  <link rel="stylesheet" href="/static/styles.css" type="text/css">
+ </head>
+ <body>
+ 	<header>
+ 		<h1>SeriousCast</h1>
 
-                    <button id="player-mute" type="button" title="Toggle Mute">M</button><!--
-                    --><input id="player-volume" min="0" max="100" value="100" type="range" title="Volume" />
-                </span>
-            </div>
-            
-            <div id="metadata">
-                <span id="player-channel"></span>
-                <span id="player-nowplaying"></span>
-            </div>
-        </header>
-        
-        <div id="info" class="box">
-            Welcome to SeriousCast, SiriusXM Internet Radio for normal clients.<br />
-            Streaming requires the VLC plugin for your web browser. <span id="player-loaded"></span><br />
-            Playlist downloads require a SHOUTcast compatible streamer: VLC works well on desktop, XiiaLive works on Android after changing the stream engine to FFmpeg.
-            <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
-        </div>
-        
-        <div class="box">
-            <h2>Channel Listing</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Genre</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for channel in channels %}
-                    <tr>
-                        <td>
-                            <a class="player-stream" data-channel="{{ channel.siriusChannelNo }}" href="#">Stream</a>
-                            &bullet;
-                            <a href="/playlist/{{ channel.siriusChannelNo }}">Playlist</a>
-                        </td>
-                        <td>{{ channel.siriusChannelNo }}</td>
-                        <td>{{ channel.name }}</a></td>
-                        <td>{{ channel.genre }}</td>
-                        <td>{{ channel.description }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
-        <script src="/static/player.js"></script>
-    </body>
+ 		<nav>
+ 			<img src="/static/img/cog.svg" />
+ 			<img src="/static/img/info.svg" />
+ 		</nav>
+ 	</header>
+  	<section class="main">
+  		<h2>Favorite Channels</h2>
+  		<table>
+  			<thead>
+                <tr>
+                    <th>#</th>
+                    <th>Play</th>
+                    <th>Name</th>
+                    <th>Genre</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                	<td class="channel">2</td>
+                    <td>
+                        <img src="/static/img/plays.svg" />
+                        <img src="/static/img/download.svg" />
+                    </td>
+                    <td class="name"><img src="http://www.siriusxm.com/cmds/displayLogo?channelKey=siriushits1&clientId=UMP&imageType=6" /></td>
+                    <td class="genre">Pop</td>
+                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
+                </tr>
+
+                
+                <tr>
+                	<td class="channel">123</td>
+                    <td>
+                        <img src="/static/img/plays.svg" />
+                        <img src="/static/img/download.svg" />
+                    </td>
+                    <td class="name">SiriusXM Hits 1</a></td>
+                    <td class="genre">Pop</td>
+                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
+                </tr>
+
+                
+                <tr>
+                	<td class="channel">2</td>
+                    <td>
+                        <img src="/static/img/plays.svg" />
+                        <img src="/static/img/download.svg" />
+                    </td>
+                    <td class="name">SiriusXM Hits 1</a></td>
+                    <td class="genre">Pop</td>
+                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
+                </tr>
+
+                
+                <tr>
+                	<td class="channel">2</td>
+                    <td>
+                        <img src="/static/img/plays.svg" />
+                        <img src="/static/img/download.svg" />
+                    </td>
+                    <td class="name">SiriusXM Hits 1</a></td>
+                    <td class="genre">Pop</td>
+                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
+                </tr>
+
+                
+                <tr>
+                	<td class="channel">2</td>
+                    <td>
+                        <img src="/static/img/plays.svg" />
+                        <img src="/static/img/download.svg" />
+                    </td>
+                    <td class="name">SiriusXM Hits 1</a></td>
+                    <td class="genre">Pop</td>
+                    <td class="desc">From pop to hip-hop and rock to R&B; SiriusXM Hits 1 is the Sound of Now!</td>
+                </tr>
+            </tbody>
+        </table>
+
+  		<h2>Channels</h2>
+  		<table id="channels">
+  			<thead>
+                <tr>
+                    <th>#</th>
+                    <th>Play</th>
+                    <th>Name</th>
+                    <th>Genre</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for channel in channels %}
+                <tr>
+                	<td class="channel">{{ channel.siriusChannelNo }}</td>
+                    <td>
+                        <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}"><img src="/static/img/plays.svg" /></a>
+                        <a href="#"><img src="/static/img/download.svg" /></a>
+                    </td>
+                    <td class="name">{{ channel.name }}</a></td>
+                    <td class="genre">{{ channel.genre }}</td>
+                    <td class="desc">{{ channel.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+  	</section>
+  	<section class="controls">
+  		<div class="playpause">
+        <img src="/static/img/pause.svg" />
+  		</div>
+  		<div class="volume">
+  			<img src="/static/img/volume-high.svg" />
+  			<br>
+  			<input type="range" name="skip" min="1" max="50" value="50">
+  		</div>
+  		<div class="currentinfo">
+  			<h3>Alt Nation</h3>
+  			<h4>Tame Impala - Elephant</h4>
+  			<span id="time">Live</span><input type="range" name="skip" min="1" max="300" value="300">
+  		</div>
+
+  	</section>
+    <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org" id="vlc" height="0" width="0" style="display: inline; margin: 0; padding: 0;" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
+    <script src="/static/player.js"></script>
+ </body>
 </html>
