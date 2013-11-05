@@ -92,7 +92,7 @@ class Sirius():
         lineup = json.loads(requests.get(lineup_url + '/en-us/json/lineup/200/client/ump').text)
         self._parse_lineup(lineup)
         
-        # with open('lineup.json', 'w') as f:
+        # with open('personal/lineup.json', 'w') as f:
             # f.write(json.dumps(self.lineup, indent=4, sort_keys=True))
 
         

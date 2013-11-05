@@ -16,17 +16,22 @@ It has dependencies on:
 * [Requests](http://docs.python-requests.org/en/latest/)
 * [Jinja2](http://jinja.pocoo.org/docs/)
 
+You can use `pip install -r requirements.txt` to install these packages,
+although Windows users may want to get a
+[binary version of PyCrypto](http://www.voidspace.org.uk/python/modules.shtml#pycrypto).
+
 Additionally, a (non-crippled) copy of ffmpeg is required for the stream muxing.
 
 ## Setup
 
-Make a copy of settings-example.cfg named settings.cfg. Replace the username and
-password fields with your SiriusXM credentials. The hostname field should be
-set to the publicly accessible hostname for your server. The ffmpeg_path field
-should reflect the location of your ffmpeg binary; if it's on the PATH you
-should be able to just use "ffmpeg".
+Make a copy of settings-example.cfg named settings.cfg.
+Replace the `username` and `password` fields with your SiriusXM credentials.
+The `hostname` field should be set to the publicly accessible hostname (or IP
+address) for your server.
+The `ffmpeg_path` field should reflect the location of your ffmpeg binary;
+if it's on the PATH you should be able to just use "`ffmpeg`".
 
-After editing the configuration file, you should be able to run server.py
+After editing the configuration file, you should be able to run `server.py`
 to start the service. Navigate to the configured port (default 30000) in a web
 browser to get a list of available channels. Each channel has a "Stream" option,
 which plays in your browser window, and a "Playlist" option, which downloads
