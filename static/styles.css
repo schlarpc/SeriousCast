@@ -192,7 +192,7 @@ th {
     height: 90px;
     background-position: 0 -600px;
     background-size: 100%;
-    -webkit-filter: blur(12px);
+    -webkit-filter: blur(12px) brightness(80%);
     z-index: -1;
     clip: rect(600px,calc(100% + 12px),690px,12px);
     margin-left: -12px;
