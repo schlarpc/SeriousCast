@@ -17,7 +17,6 @@ $(function() {
         $('.currentinfo h3').text(channel);
         $('.currentinfo h4').text(now_playing);
         $('.controls').css('bottom', '0');
-        $('#channels').css('margin-bottom', '98px');
         $('title').text(now_playing);
     }
     
@@ -75,15 +74,6 @@ $(function() {
         $('#player-rewind').val(300);
         $('#player-rewind').change();
         $('#player-rewind').mouseup();
-    });
-
-    $('#infobutton').mouseover(function() {
-        console.log('test');
-        $('.info').show();
-        $('#infobutton').mouseleave(function() {
-            $('.info').hide();
-            console.log('test2');
-        });
     });
     
     setInterval(function() {
