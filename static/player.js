@@ -14,17 +14,19 @@ $(function() {
     }
     
     function set_metadata(channel, now_playing) {
-        $('#player-channel').text(channel);
-        $('#player-nowplaying').text(now_playing);
-        $('body').css('margin-top', '80px');
+        $('.currentinfo h3').text(channel);
+        $('.currentinfo h4').text(now_playing);
+        $('.controls').css('bottom', '0');
         $('title').text(now_playing);
     }
     
     if (vlc.playlist === undefined) {
+        /*
         $('#player, .player-stream').remove();
         $('header').css('position', 'static');
         $('h1').css('float', 'none');
         $('body').css('margin-top', '0');
+        */
         $('#player-loaded').text('VLC plugin not found, streaming not enabled.');
     }
     
