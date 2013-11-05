@@ -60,7 +60,7 @@ table {
     margin-bottom: 98px;
 }
 tr {
-    height: 38px;
+    height: 28px;
     line-height: 28px;
 }
 td {
@@ -83,12 +83,6 @@ th {
     font-size: 1.2em;
     color: #2099c8;
 
-}
-.button {
-    width: 40px;
-}
-.desc {
-    font-size: .8em;
 }
 
 

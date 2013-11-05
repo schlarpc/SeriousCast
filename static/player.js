@@ -36,17 +36,11 @@ $(function() {
         return false;
     });
     
-    $('.playpause img').click(function() {
-        if (vlc.playlist.isPlaying) {
-            $(this).attr('src','static/img/play.svg');
-        } else {
-            $(this).attr('src','static/img/pause.svg');
-        }
-        console.log(vlc.audio.volume);
+    $('#player-pause').click(function() {
         vlc.playlist.togglePause();
     });
     
-    $('.volume img').click(function() {
+    $('#player-mute').click(function() {
         vlc.audio.toggleMute();
     });
     
@@ -58,9 +52,9 @@ $(function() {
         offset = 300 - $('#player-rewind').val();
         
         if (offset == 0) {
-            $('#time').text('Live');
+            $('#player-rewind-status').text('Live');
         } else {
-            $('#time').text(offset + ' min ago');
+            $('#player-rewind-status').text(offset + ' min ago');
         }
     });
     
@@ -70,7 +64,7 @@ $(function() {
         }
     });
     
-    $('#time').click(function() {
+    $('#player-rewind-status').click(function() {
         $('#player-rewind').val(300);
         $('#player-rewind').change();
         $('#player-rewind').mouseup();
