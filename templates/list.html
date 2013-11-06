@@ -28,21 +28,7 @@
                     <th>Description</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for channel in channels %}
-                <tr class="favsingle" data-channel="{{ channel.siriusChannelNo }}">
-                    <td class="channel">{{ channel.siriusChannelNo }}</td>
-                    <td class="button">
-                        <a class="player-stream" href="#" id="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" alt="play" /></a>
-                        <a class="channel-remove" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Add to Favorites"><img src="/static/img/minus.svg" alt="plus" /></a>
-                        <a href="/playlist/{{ channel.siriusChannelNo }}" title="Download"><img src="/static/img/arrow-down.svg" alt="download" /></a>
-
-                    </td>
-                    <td class="name"><img src="http://www.siriusxm.com/cmds/displayLogo?channelKey={{ channel.contentId }}&clientId=UMP&imageType=6" /></td>
-                    <td class="genre">{{ channel.genre }}</td>
-                    <td class="desc">{{ channel.description }}</td>
-                </tr>
-                {% endfor %}
+            <tbody id="listing">
             </tbody>
         </table>
         <h2>Channels</h2>
@@ -58,7 +44,7 @@
             </thead>
             <tbody>
                 {% for channel in channels %}
-                <tr data-channel="{{ channel.siriusChannelNo }}">
+                <tr data-channel="{{ channel.siriusChannelNo }}" data-id="{{ channel.contentId }}">
                     <td class="channel">{{ channel.siriusChannelNo }}</td>
                     <td class="button">
                         <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" alt="play" /></a>

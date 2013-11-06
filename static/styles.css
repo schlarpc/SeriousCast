@@ -119,6 +119,9 @@ th {
     height: 30px;
     width: 30px;
 }
+.playpause img[href*=http://] {
+    -webkit-filter: brightness(75%);
+}
 .volume {
     float: right;
     margin-right: 30px;
@@ -192,7 +195,7 @@ th {
     height: 90px;
     background-position: 0 -600px;
     background-size: 100%;
-    -webkit-filter: blur(12px) brightness(80%);
+    -webkit-filter: blur(12px) brightness(70%);
     z-index: -1;
     clip: rect(600px,calc(100% + 12px),690px,12px);
     margin-left: -12px;
@@ -208,7 +211,4 @@ th {
 }
 #favchannels {
     margin-top: 8px;
-}
-#favchannels tr {
-    background-color: #c7e7fc;
 }

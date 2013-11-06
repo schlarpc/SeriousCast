@@ -38,7 +38,7 @@ $(function() {
                 var smallart = data['results'][0]['artworkUrl60'];
                 var bigart = smallart.replace("60x60-50","400x400-75");
                 $('.art').css('background-image',"url('"+bigart+"')");
-                $('.playpause').css('background-image',"url('"+smallart+"')");
+                //$('.playpause').css('background-image',"url('"+smallart+"')");
                 $('#buylink').show();
                 $('#buylink').attr('href',data['results'][0]['trackViewUrl']);
             } else {
@@ -57,6 +57,7 @@ $(function() {
     }
 
     function remove_favorite(channel) {
+        console.log('hi!')
         if (favorites.indexOf(String(channel)) != -1) {
             favorites.splice(favorites.indexOf(String(channel)),1);
             put_favorites();
@@ -69,22 +70,27 @@ $(function() {
     }
 
     function rebuild_favorites() {
-        favorites.splice(favorites.indexOf(''),1);
+        if (favorites.indexOf('') != -1) {
+            favorites.splice(favorites.indexOf(''),1);
+        }
         if (favorites.length > 0) {
             $('#favhead').show();
             $('#favchannels').show();
-            $('.favsingle').hide();
-            $('.favsingle').each(function(index) {
-                if (favorites.indexOf(String($(this).data('channel'))) != -1) {
-                    $(this).show();
-                }
-            });
+            $('#favchannels tr').remove();
+            $.each(favorites, function(data, key) {
+                var element = $('tr[data-channel='+key+']').clone();
+                $('#listing').append(element);
+                $('.name',element).html('<img src="http://www.siriusxm.com/cmds/displayLogo?channelKey='+element.data('id')+'&clientId=UMP&imageType=6" title="'+$('.name',element).html()+'" />')
+            })
+            $('#favchannels .channel-add').attr('class','channel-remove')
+            $('#favchannels .channel-remove img').attr('src','/static/img/minus.svg');
         } else {
             $('#favhead').hide();
             $('#favchannels').hide();
         }
         
     }
+
     
     if (vlc.playlist === undefined) {
         /*
@@ -116,7 +122,8 @@ $(function() {
         add_favorite($(this).data('channel'));
     });
 
-    $('.channel-remove').click(function() {
+    $('#favchannels tbody').on("click",".channel-remove",function() {
+        console.log('hello');
         remove_favorite($(this).data('channel'));
     });
     
