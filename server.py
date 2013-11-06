@@ -9,6 +9,7 @@ import configparser
 import struct
 import os
 import mimetypes
+import json
 
 import jinja2
 import sirius
@@ -51,14 +52,10 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         return metadata
 
 
-    def send_response_and_log(self, response_code):
-        self.log_request(response_code)
-        self.send_response_only(response_code)
-
-
     def send_standard_headers(self, content_length, headers=None, response_code=200):
         self.protocol_version = 'HTTP/1.1'
-        self.send_response_and_log(response_code)
+        self.log_request(response_code)
+        self.send_response_only(response_code)
         self.send_header('Connection', 'close')
         self.send_header('Content-length', content_length)
 
@@ -112,6 +109,27 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             except (ConnectionResetError, ConnectionAbortedError) as e:
                 print('Connection dropped: ', e)
                 return
+
+
+    def channel_metadata(self, channel_number, rewind=0):
+        channel_number = int(channel_number)
+        rewind = int(rewind)
+
+        channel = sxm.lineup[channel_number]
+        channel_id = str(channel['channelKey'])
+        packet = next(sxm.packet_generator(channel_id, rewind))
+        metadata = self.extract_metadata(packet)
+
+        response = json.dumps({
+            'channel': channel,
+            'nowplaying': metadata,
+        }, sort_keys=True, indent=4).encode('utf-8')
+
+        self.send_standard_headers(len(response), {
+            'Content-type': 'application/json',
+        })
+
+        self.wfile.write(response)
 
 
     def channel_playlist(self, channel_number):
@@ -185,6 +203,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             (r'^/static/(?P<path>.+)$', self.static_file),
             (r'^/channel/(?P<channel_number>[0-9]+)$', self.channel_stream),
             (r'^/channel/(?P<channel_number>[0-9]+)/(?P<rewind>[0-9]+)$', self.channel_stream),
+            (r'^/metadata/(?P<channel_number>[0-9]+)$', self.channel_metadata),
+            (r'^/metadata/(?P<channel_number>[0-9]+)/(?P<rewind>[0-9]+)$', self.channel_metadata),
             (r'^/playlist/(?P<channel_number>[0-9]+)$', self.channel_playlist),
         )
 
