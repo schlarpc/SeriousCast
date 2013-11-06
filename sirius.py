@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 import json
 import struct
 import time
+import logging
 
 from Crypto.Cipher import AES
 import requests
@@ -188,19 +189,19 @@ class Sirius():
                     new_entries = self._filter_playlist(resp.text, entry, rewind)
                     playlist += [x for x in new_entries if x not in playlist]
                 else:
-                    print('Expired token, renewing')
+                    logging.warning('Expired token, renewing')
                     channel_url, token = self._channel_token(id)
 
             if len(playlist):
                 entry = playlist.pop(0)
-                print(entry)
+                logging.debug('Got audio chunk ' + entry)
 
                 resp = requests.get(hq_url + entry, params={'token': token})
                 if resp.status_code == 200:
                     yield self._decrypt_packet(resp.content)
                 else:
                     playlist.insert(0, entry)
-                    print('Expired token, renewing')
+                    logging.warning('Expired token, renewing')
                     channel_url, token = self._channel_token(id)
             else:
                 time.sleep(10)
