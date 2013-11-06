@@ -1,10 +1,12 @@
 
 $(function() {
-    var vlc = $('#vlc')[0];
+    //var vlc = $('#vlc')[0];
     var url_base = 'http://' + document.location.hostname + ':' + document.location.port;
     var offset = 0;
     var current_channel = undefined;
     var favorites = $.cookie('favorites');
+    var now_playing_last = undefined;
+    var metadata_request = false;
     
     if (favorites != undefined) {
         favorites = unescape(favorites).split(',');
@@ -22,6 +24,9 @@ $(function() {
     
     
     function start_stream(stream_url) {
+        set_metadata('Retrieving info...', '');
+        metadata_request = false;
+        
         vlc.playlist.stop();
         vlc.playlist.items.clear();
         vlc.playlist.add(stream_url);
@@ -34,6 +39,11 @@ $(function() {
         $('.controls').css('bottom', '0');
         $('#channels').css('margin-bottom', '98px');
         $('title').text(now_playing);
+        
+        if (now_playing !== now_playing_last) {
+            change_art(now_playing);
+            now_playing_last = now_playing;
+        }
     }
 
     function change_art(title) {
@@ -172,19 +182,22 @@ $(function() {
     
     setInterval(function() {
         try {
-            var title = vlc.mediaDescription.title;
-            var now_playing = "Retrieving info...";
-            
-            if (title != null) {
-                if (vlc.mediaDescription.nowPlaying != null) {
-                    now_playing = vlc.mediaDescription.nowPlaying;
+            if (vlc.mediaDescription === undefined || vlc.mediaDescription.nowPlaying === null) {
+                if (current_channel !== undefined && !metadata_request) {
+                    metadata_request = true;
+                    $.getJSON('/metadata/' + current_channel + '/' + offset, function (data) {
+                        var channel = data['channel']['name'];
+                        var now_playing = data['nowplaying']['artist'] + ' - ' + data['nowplaying']['title'];
+                        set_metadata(channel, now_playing);
+                        metadata_request = false;
+                    });
                 }
-                if ($('.currentinfo h4').text() != now_playing || $('.currentinfo h3').text() != channel) {
-                    change_art(now_playing);
-                    set_metadata(title, now_playing);
-                }
+            } else {
+                var channel = vlc.mediaDescription.title;
+                var now_playing = vlc.mediaDescription.nowPlaying;
+                set_metadata(channel, now_playing);
             }
         } catch (ex) {
         }
-    }, 1000);
+    }, 2000);
 });
