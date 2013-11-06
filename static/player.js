@@ -12,6 +12,14 @@ $(function() {
         favorites = Array();
     }
     rebuild_favorites();
+
+    if ($.cookie('volume') != undefined) {
+        vlc.audio.volume = parseInt($.cookie('volume'),10);
+        $('#player-volume').val(parseInt($.cookie('volume'),10));
+    } else {
+        vlc.audio.volume = 100;
+    }
+    
     
     function start_stream(stream_url) {
         vlc.playlist.stop();
@@ -57,7 +65,6 @@ $(function() {
     }
 
     function remove_favorite(channel) {
-        console.log('hi!')
         if (favorites.indexOf(String(channel)) != -1) {
             favorites.splice(favorites.indexOf(String(channel)),1);
             put_favorites();
@@ -93,12 +100,6 @@ $(function() {
 
     
     if (vlc.playlist === undefined) {
-        /*
-        $('#player, .player-stream').remove();
-        $('header').css('position', 'static');
-        $('h1').css('float', 'none');
-        $('body').css('margin-top', '0');
-        */
         $('#player-loaded').text('VLC plugin not found, streaming not enabled.');
     }
     
@@ -114,7 +115,6 @@ $(function() {
         } else {
             $(this).attr('src','static/img/pause.svg');
         }
-        console.log(vlc.audio.volume);
         vlc.playlist.togglePause();
     });
 
@@ -123,7 +123,6 @@ $(function() {
     });
 
     $('#favchannels tbody').on("click",".channel-remove",function() {
-        console.log('hello');
         remove_favorite($(this).data('channel'));
     });
     
@@ -138,6 +137,7 @@ $(function() {
     
     $('#player-volume').change(function() {
         vlc.audio.volume = parseInt($('#player-volume').val(), 10);
+        $.cookie('volume',vlc.audio.volume,{ expires: 9999 });
     });
     
     $('#player-rewind').change(function() {
@@ -163,11 +163,9 @@ $(function() {
     });
 
     $('#infobutton').mouseover(function() {
-        console.log('test');
         $('.info').show();
         $('#infobutton').mouseleave(function() {
             $('.info').hide();
-            console.log('test2');
         });
     });
     
