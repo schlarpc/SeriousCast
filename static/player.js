@@ -1,10 +1,10 @@
 
-var favorites = $.cookie('favorites');
 $(function() {
     var vlc = $('#vlc')[0];
     var url_base = 'http://' + document.location.hostname + ':' + document.location.port;
     var offset = 0;
     var current_channel = undefined;
+    var favorites = $.cookie('favorites');
     
     if (favorites != undefined) {
         favorites = unescape(favorites).split(',');
