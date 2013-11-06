@@ -49,6 +49,7 @@ $(function() {
                 //$('.playpause').css('background-image',"url('"+smallart+"')");
                 $('#buylink').show();
                 $('#buylink').attr('href',data['results'][0]['trackViewUrl']);
+                $('link[rel="shortcut icon"]').attr('href',smallart);
             } else {
                 $('.art').css('background-image',"url('http://a5.mzstatic.com/us/r30/Music/v4/04/15/78/04157815-169d-9f91-d596-342dee2f4c46/UMG_cvrart_00602537150120_01_RGB72_1200x1200_12UMGIM46901.400x400-75.jpg')");
                 $('.playpause').css('background-image','none');
