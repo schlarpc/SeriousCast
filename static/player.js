@@ -114,11 +114,6 @@ $(function() {
         $('#player-loaded').text('VLC plugin not found, streaming not enabled.');
     }
     
-    $('.player-stream').click(function() {
-        current_channel = $(this).data('channel');
-        start_stream(url_base + '/channel/' + current_channel + '/' + offset);
-        return false;
-    });
     
     $('.playpause img').click(function() {
         if (vlc.playlist.isPlaying) {
@@ -131,6 +126,12 @@ $(function() {
 
     $('.channel-add').click(function() {
         add_favorite($(this).data('channel'));
+    });
+
+    $('table').on("click",".player-stream",function() {
+        current_channel = $(this).data('channel');
+        start_stream(url_base + '/channel/' + current_channel + '/' + offset);
+        return false;
     });
 
     $('#favchannels tbody').on("click",".channel-remove",function() {
