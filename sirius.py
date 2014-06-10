@@ -9,9 +9,20 @@ import struct
 import time
 import logging
 
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
+
 import requests
-import pbkdf2
+
+
+class SiriusException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 
 class Sirius():
     BASE_URL = 'https://www.siriusxm.com/player/'
@@ -27,8 +38,9 @@ class Sirius():
         Key is derived using PBKDF2 and a salt
         Blank IV is used because of reasons (not actually insecure, key changes)
         """
-        cipher = AES.new(self.key, AES.MODE_CBC, bytes(16))
-        return cipher.encrypt(bytes.fromhex(plaintext))
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes(16)), backend=self.backend)
+        encryptor = cipher.encryptor()
+        return encryptor.update(bytes.fromhex(plaintext)) + encryptor.finalize()
 
 
     def _decrypt(self, ciphertext):
@@ -37,8 +49,9 @@ class Sirius():
         Key is derived using PBKDF2 and a salt
         Blank IV is used because of reasons (not actually insecure, key changes)
         """
-        cipher = AES.new(self.key, AES.MODE_CBC, bytes(16))
-        return cipher.decrypt(bytes.fromhex(ciphertext))
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes(16)), backend=self.backend)
+        decryptor = cipher.decryptor()
+        return decryptor.update(bytes.fromhex(ciphertext)) + decryptor.finalize()
 
 
     def _decrypt_packet(self, data):
@@ -85,6 +98,8 @@ class Sirius():
         Creates a new instance of the Sirius player
         At construction, we only get the global config and the channel lineup
         """
+        self.backend = default_backend()
+        
         player_page = requests.get(self.BASE_URL).text
         config_url = re.search("flashvars.configURL = '(.+?)'", player_page).group(1)
         self.config = ET.fromstring(requests.get(config_url).text)
@@ -125,8 +140,15 @@ class Sirius():
         message = challenge + message_hash[:32]
 
         password_hash = hashlib.md5(password.encode()).hexdigest()
-        self.key = pbkdf2.pbkdf2(hashlib.sha256, bytes.fromhex(password_hash), bytes.fromhex(salt), iterations, self.KEY_LENGTH)
-
+        kdf = PBKDF2HMAC(
+            algorithm = hashes.SHA256,
+            length = self.KEY_LENGTH,
+            salt = bytes.fromhex(salt),
+            iterations = iterations,
+            backend = self.backend,
+        )
+        self.key = kdf.derive(bytes.fromhex(password_hash))
+        
         password_encrypted = self._encrypt(message + '10' * 16)
 
         auth_response = json.dumps({
@@ -143,6 +165,13 @@ class Sirius():
         })
         auth_result = json.loads(requests.post(auth_url + '/en-us/json/user/login/v3/complete',
             auth_response).text)['AuthenticationResponse']
+
+        if auth_result['status'] == 0:
+            if auth_result['messages']['code'] == 401:
+                raise SiriusException('Invalid password')
+            else:
+                raise SiriusException('Unknown login error')
+
         self.session_id = auth_result['sessionId']
 
 
