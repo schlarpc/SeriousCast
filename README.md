@@ -12,13 +12,13 @@ using the VLC browser plugin.
 SeriousCast is written in Python, and more specifically targets Python 3.3.
 
 It has dependencies on:
-* [PyCrypto](https://www.dlitz.net/software/pycrypto/)
+* [cryptography](https://cryptography.io/en/latest/)
 * [Requests](http://docs.python-requests.org/en/latest/)
 * [Jinja2](http://jinja.pocoo.org/docs/)
 
 You can use `pip install -r requirements.txt` to install these packages,
-although Windows users may want to get a
-[binary version of PyCrypto](http://www.voidspace.org.uk/python/modules.shtml#pycrypto).
+although Windows users may need to get an
+[OpenSSL binary](https://www.openssl.org/related/binaries.html).
 
 Additionally, a (non-crippled) copy of ffmpeg is required for the stream muxing.
 
