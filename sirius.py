@@ -200,7 +200,24 @@ class Sirius():
             return self.token_cache[channel_key]
         else:
             self.login(self.username, self.password)
-            return self._channel_token(channel_key, invalidate)
+            return self._channel_token(channel_key, True)
+
+
+    def get_playlist(self, channel_key):
+        """
+        Retrieve m3u8 playlist for a given channel
+        """
+        channel_url, token = self._channel_token(channel_key)
+        hq_url = channel_url + 'HLS_' + channel_key + '_64k/'
+        playlist_url = hq_url + channel_key + '_64k_large.m3u8'
+
+        resp = requests.get(playlist_url, params={'token': token})
+        if resp.status_code == 200:
+            return resp.text
+        else:
+            logging.warning('Expired token, renewing')
+            self._channel_token(channel_key, True)
+            return self.get_playlist(channel_key)
 
 
     def packet_generator(self, id, rewind=0):
