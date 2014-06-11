@@ -91,7 +91,7 @@ class Sirius():
                     channel['genre'] = genre['name']
                     self.lineup[int(channel['siriusChannelNo'])] = channel
 
-                    
+
     def __init__(self):
         """
         Creates a new instance of the Sirius player
@@ -99,7 +99,7 @@ class Sirius():
         """
         self.backend = default_backend()
         self.token_cache = {}
-        
+
         player_page = requests.get(self.BASE_URL).text
         config_url = re.search("flashvars.configURL = '(.+?)'", player_page).group(1)
         self.config = ET.fromstring(requests.get(config_url).text)
@@ -107,11 +107,11 @@ class Sirius():
         lineup_url = self.config.findall("./consumerConfig/config[@name='ChannelLineUpBaseUrl']")[0].attrib['value']
         lineup = json.loads(requests.get(lineup_url + '/en-us/json/lineup/200/client/ump').text)
         self._parse_lineup(lineup)
-        
+
         # with open('personal/lineup.json', 'w') as f:
             # f.write(json.dumps(self.lineup, indent=4, sort_keys=True))
 
-        
+
     def login(self, username, password):
         """
         This negotiates the authentication with Sirius
@@ -148,7 +148,7 @@ class Sirius():
             backend = self.backend,
         )
         self.key = kdf.derive(bytes.fromhex(password_hash))
-        
+
         password_encrypted = self._encrypt(message + '10' * 16)
 
         auth_response = json.dumps({
