@@ -36,7 +36,6 @@ class Sirius():
         """
         Encryption based on account password
         Key is derived using PBKDF2 and a salt
-        Blank IV is used because of reasons (not actually insecure, key changes)
         """
         cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes(16)), backend=self.backend)
         encryptor = cipher.encryptor()
@@ -47,7 +46,6 @@ class Sirius():
         """
         Decryption based on account password
         Key is derived using PBKDF2 and a salt
-        Blank IV is used because of reasons (not actually insecure, key changes)
         """
         cipher = Cipher(algorithms.AES(self.key), modes.CBC(bytes(16)), backend=self.backend)
         decryptor = cipher.decryptor()
@@ -62,8 +60,9 @@ class Sirius():
         """
         key = bytes.fromhex(self.PACKET_AES_KEY)
         iv = data[:16]
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        return cipher.decrypt(data[16:])
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=self.backend)
+        decryptor = cipher.decryptor()
+        return decryptor.update(data[16:]) + decryptor.finalize()
 
 
     def _filter_playlist(self, playlist, last=None, rewind=0):
@@ -203,21 +202,36 @@ class Sirius():
             return self._channel_token(channel_key, True)
 
 
+    def _get_token_resource(self, channel_key, file):
+        """
+        Retrieves a token protected channel resource, returns response object
+        """
+        channel_url, token = self._channel_token(channel_key)
+        hq_path = channel_url + 'HLS_' + channel_key + '_64k/'
+        resp = requests.get(hq_path + file, params={'token': token})
+        if resp.status_code == 200:
+            return resp
+        else:
+            logging.warning('Expired token, renewing')
+            self._channel_token(channel_key, True)
+            return self._get_token_resource(channel_key, file)
+
+
     def get_playlist(self, channel_key):
         """
         Retrieve m3u8 playlist for a given channel
         """
-        channel_url, token = self._channel_token(channel_key)
-        hq_url = channel_url + 'HLS_' + channel_key + '_64k/'
-        playlist_url = hq_url + channel_key + '_64k_large.m3u8'
+        resp = self._get_token_resource(channel_key, channel_key + '_64k_large.m3u8')
+        return resp.text
 
-        resp = requests.get(playlist_url, params={'token': token})
-        if resp.status_code == 200:
-            return resp.text
-        else:
-            logging.warning('Expired token, renewing')
-            self._channel_token(channel_key, True)
-            return self.get_playlist(channel_key)
+
+    def get_segment(self, channel_key, segment):
+        """
+        Get a media segment from a channel, return decrypted as MPEG TS
+        """
+        resp = self._get_token_resource(channel_key, segment)
+        segment = self._decrypt_packet(resp.content)
+        return segment
 
 
     def packet_generator(self, id, rewind=0):
