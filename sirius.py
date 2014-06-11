@@ -99,6 +99,7 @@ class Sirius():
         At construction, we only get the global config and the channel lineup
         """
         self.backend = default_backend()
+        self.token_cache = {}
         
         player_page = requests.get(self.BASE_URL).text
         config_url = re.search("flashvars.configURL = '(.+?)'", player_page).group(1)
@@ -175,12 +176,15 @@ class Sirius():
         self.session_id = auth_result['sessionId']
 
 
-    def _channel_token(self, id):
+    def _channel_token(self, channel_key, invalidate=False):
         """
         Returns a 2-tuple that acts as a stream token
         """
+        if not invalidate and channel_key in self.token_cache:
+            return self.token_cache[channel_key]
+
         token_url = self.config.findall("./consumerConfig/config[@name='TokenBaseUrl']")[0].attrib['value']
-        resp = requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + id + '/', params = {
+        resp = requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + channel_key + '/', params = {
             'sessionId': self.session_id,
         }).text
 
@@ -192,10 +196,11 @@ class Sirius():
             channel_url, token = re.search('(.+?)\\?token=([a-f0-9_]+)',
                 token_data[6 : 6 + length].decode()).group(1, 2)
 
-            return (channel_url, token)
+            self.token_cache[channel_key] = (channel_url, token)
+            return self.token_cache[channel_key]
         else:
             self.login(self.username, self.password)
-            return self._channel_token(id)
+            return self._channel_token(channel_key, invalidate)
 
 
     def packet_generator(self, id, rewind=0):
@@ -219,7 +224,7 @@ class Sirius():
                     playlist += [x for x in new_entries if x not in playlist]
                 else:
                     logging.warning('Expired token, renewing')
-                    channel_url, token = self._channel_token(id)
+                    channel_url, token = self._channel_token(id, True)
 
             if len(playlist):
                 entry = playlist.pop(0)
@@ -231,6 +236,6 @@ class Sirius():
                 else:
                     playlist.insert(0, entry)
                     logging.warning('Expired token, renewing')
-                    channel_url, token = self._channel_token(id)
+                    channel_url, token = self._channel_token(id, True)
             else:
                 time.sleep(10)
