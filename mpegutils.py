@@ -50,12 +50,16 @@ def parse_transport_stream(data):
                     'opcr_padding': ts.read(6).uint,
                     'opcr_extension': ts.read(9).uint,
                 })
+            if packet['splicing_point_flag']:
+                packet.update({
+                    'splice_countdown': ts.read(8).uint,
+                })
 
-            packet.update({
-                'splice_countdown': ts.read(8).uint,
-            })
-
-            remaining_length = packet['adaptation_field_length'] - (2 + 4 * packet['pcr_flag'] + 4 * packet['opcr_flag'])
+            remaining_length = packet['adaptation_field_length'] - (
+                2 +
+                6 * packet['pcr_flag'] +
+                6 * packet['opcr_flag'] +
+                1 * packet['splicing_point_flag'])
             if remaining_length > 0:
                 ts.read(remaining_length * 8)
 
@@ -97,7 +101,7 @@ def create_id3(pcr, title, artist):
 
 
 if __name__ == '__main__':
-    with open('area33_64k_1_061235739360_00252952.ts', 'rb') as f:
+    with open('personal/area33_64k_1_061235739360_00252952.ts', 'rb') as f:
         aac = bytearray()
         metadata = bytearray()
         pcr = None
@@ -110,11 +114,11 @@ if __name__ == '__main__':
             elif packet['pid'] == 1024:
                 metadata += packet['payload']
 
-        with open('metadata.bin', 'wb') as m, open('aac.bin', 'wb') as a:
+        with open('personal/metadata.bin', 'wb') as m, open('personal/aac.bin', 'wb') as a:
             a.write(aac)
             m.write(metadata)
 
         id3 = create_id3(pcr, 'title!', 'artist?')
-        with open('tagged.m4a', 'wb') as tag:
+        with open('personal/tagged.m4a', 'wb') as tag:
             tag.write(id3)
             tag.write(aac)
