@@ -211,6 +211,8 @@ class Sirius():
         resp = requests.get(hq_path + file, params={'token': token})
         if resp.status_code == 200:
             return resp
+        elif resp.status_code == 404:
+            raise SiriusException('Resource not found')
         else:
             logging.warning('Expired token, renewing')
             self._channel_token(channel_key, True)
