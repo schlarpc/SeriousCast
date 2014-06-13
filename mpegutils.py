@@ -4,33 +4,23 @@ import binascii
 import io
 import bitstring
 
+
 def parse_packetized_elementary_stream(data):
-    data = data[data.index(b'\x00\x00\x01'):]
-    
-    while len(data):
+    pes = bitstring.ConstBitStream(data[data.index(b'\x00\x00\x01'):])
+
+    while pes.pos < len(pes):
         packet = {}
-        
-        try:
-            pes_length = data.index(b'\x00\x00\x01', 3)
-            pes = bitstring.ConstBitStream(data[:pes_length])
-            data = data[pes_length:]
-        except ValueError:
-            pes = bitstring.ConstBitStream(data)
-            data = bytearray()
-        
-        print(pes.peek(32))
-        
-        if len(pes) <= 48 or pes.read(24) != b'\x00\x00\x01':
-            continue
-            
+
+        if pes.read(24) != '0x000001':
+            break
         packet.update({
             'stream_id': pes.read(8),
             'packet_length': pes.read(16).uint,
         })
-        
+
         if pes.peek(2) == '0b10':
             pes.read(2)
-            
+
             packet.update({
                 'scrambling_control': pes.read(2),
                 'priority': pes.read(1).bool,
@@ -46,52 +36,29 @@ def parse_packetized_elementary_stream(data):
                 'extension_flag': pes.read(1).bool,
                 'pes_header_length': pes.read(8).uint,
             })
-            
+
             pes.read(8 * packet['pes_header_length'])
-            
+
+        # According to the standard, this is how much is left...
+        # But SXM packets are malformed slightly as far as I can tell
+        # Even ffmpeg complains
+        remaining_length = packet['packet_length']
+        if 'scrambling_control' in packet:
+            remaining_length -= 3 + packet['pes_header_length']
+
+        # Instead we find the next PES packet from here and calculate out how much to read
+        original_pos = pes.pos
+        next_packet = pes.find('0x000001', start=original_pos + (remaining_length * 8), bytealigned=True)
+        if len(next_packet):
+            remaining_length = (next_packet[0] - original_pos) // 8
+        else:
+            remaining_length = (len(pes) - original_pos) // 8
+        pes.pos = original_pos
+
         packet.update({
-            'payload': pes.read('bytes'),
+            'payload': pes.read(8 * remaining_length).bytes
         })
-        
-        print(repr(packet['payload'][:20]))
-                
-        #print(pes.read(8 * 4))
-    
-    # while len(data):
-        # packet = {}
-        
-        
-        # packet.update({
-            # 'stream_id': 
-        
-    
-            # try:
-            # while True:
-                #find the start of an MPEG PES
-                # idx = data.index(
-                # data = data[idx + 3:]
-
-                # check if the stream id is the siriusxm metadata id, 0xbf
-                # if (data[0] == 0xbf):
-                    # packet_length, subtype, count = struct.unpack('!xHxxxxBB', data[:9])
-                    # data = data[9:]
-
-                    # subtype FE is song info
-                    # if subtype == 0xfe:
-                        # els = []
-                        # for i in range(count):
-                            # length = data[0]
-                            # els.append(data[2 : length + 2])
-                            # data = data[length + 2:]
-                        # metadata = {
-                            # 'title': els[0].decode('utf-8'),
-                            # 'artist': els[1].decode('utf-8'),
-                            # 'album': els[2].decode('utf-8'),
-                            # }
-        # except ValueError:
-            # pass
-            
-        # return metadata
+        yield packet
 
 
 def parse_transport_stream(data):
@@ -145,7 +112,7 @@ def parse_transport_stream(data):
                 })
 
             remaining_length = packet['adaptation_field_length'] - (
-                2 +
+                1 +
                 6 * packet['pcr_flag'] +
                 6 * packet['opcr_flag'] +
                 1 * packet['splicing_point_flag'])
@@ -191,7 +158,7 @@ def create_id3(pcr, title, artist):
 
 if __name__ == '__main__':
     with open('personal/decrypted_segment.ts', 'rb') as f:
-        aac = bytearray()
+        audio = bytearray()
         metadata = bytearray()
         pcr = None
 
@@ -199,19 +166,20 @@ if __name__ == '__main__':
             if pcr == None and 'pcr_base' in packet:
                 pcr = packet['pcr_base']
             if packet['pid'] == 768:
-                aac += packet['payload']
+                audio += packet['payload']
             elif packet['pid'] == 1024:
                 metadata += packet['payload']
 
-        with open('personal/metadata_pes.bin', 'wb') as m, open('personal/audio_pes.bin', 'wb') as a:
-            a.write(aac)
-            m.write(metadata)
-            
-        parse_packetized_elementary_stream(aac)
-        print('so meta')
-        parse_packetized_elementary_stream(metadata)
+        open('personal/pes_metadata.bin', 'wb').write(metadata)
+        open('personal/pes_audio.bin', 'wb').write(audio)
+
+        audio_adts = bytearray()
+
+        for packet in parse_packetized_elementary_stream(audio):
+            audio_adts += packet['payload']
+
+        open('personal/adts_from_mpegutils.adts', 'wb').write(audio_adts)
 
         id3 = create_id3(pcr, 'title!', 'artist?')
-        with open('personal/tagged.m4a', 'wb') as tag:
-            tag.write(id3)
-            tag.write(aac)
+        open('personal/tagged.m4a', 'wb').write(id3 + audio_adts)
+
