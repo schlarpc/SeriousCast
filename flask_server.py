@@ -25,6 +25,7 @@ def channel(channel_number):
 
 
 @app.route("/channel/<int:channel_number>/playlist")
+@app.route("/channel/<int:channel_number>/playlist.m3u8")
 def playlist(channel_number):
     original_playlist = sxm.get_playlist(sxm.lineup[channel_number]['channelKey'])
     playlist = []
