@@ -39,21 +39,9 @@ def parse_packetized_elementary_stream(data):
 
             pes.read(8 * packet['pes_header_length'])
 
-        # According to the standard, this is how much is left...
-        # But SXM packets are malformed slightly as far as I can tell
-        # Even ffmpeg complains
         remaining_length = packet['packet_length']
         if 'scrambling_control' in packet:
             remaining_length -= 3 + packet['pes_header_length']
-
-        # Instead we find the next PES packet from here and calculate out how much to read
-        original_pos = pes.pos
-        next_packet = pes.find('0x000001', start=original_pos + (remaining_length * 8), bytealigned=True)
-        if len(next_packet):
-            remaining_length = (next_packet[0] - original_pos) // 8
-        else:
-            remaining_length = (len(pes) - original_pos) // 8
-        pes.pos = original_pos
 
         packet.update({
             'payload': pes.read(8 * remaining_length).bytes
