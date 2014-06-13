@@ -41,8 +41,8 @@ def playlist(channel_number):
 @app.route("/channel/<int:channel_number>/media/<segment>")
 def media_segment(channel_number, segment):
     segment_data = sxm.get_segment(sxm.lineup[channel_number]['channelKey'], segment)
-    
-    aac = bytearray()
+
+    audio = bytearray()
     metadata = bytearray()
     pcr = None
 
@@ -50,13 +50,18 @@ def media_segment(channel_number, segment):
         if pcr == None and 'pcr_base' in packet:
             pcr = packet['pcr_base']
         if packet['pid'] == 768:
-            aac += packet['payload']
+            audio += packet['payload']
         elif packet['pid'] == 1024:
             metadata += packet['payload']
-    
+
+    audio_adts = bytearray()
+    for packet in mpegutils.parse_packetized_elementary_stream(audio):
+        audio_adts += packet['payload']
+
     id3 = mpegutils.create_id3(pcr, 'Title', 'Artist')
-    
-    return Response(segment_data, mimetype='application/octet-stream')
+
+    return Response(id3 + audio_adts, mimetype='application/octet-stream')
+
 
 if __name__ == "__main__":
     cfg = configparser.ConfigParser()
