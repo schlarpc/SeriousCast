@@ -4,6 +4,95 @@ import binascii
 import io
 import bitstring
 
+def parse_packetized_elementary_stream(data):
+    data = data[data.index(b'\x00\x00\x01'):]
+    
+    while len(data):
+        packet = {}
+        
+        try:
+            pes_length = data.index(b'\x00\x00\x01', 3)
+            pes = bitstring.ConstBitStream(data[:pes_length])
+            data = data[pes_length:]
+        except ValueError:
+            pes = bitstring.ConstBitStream(data)
+            data = bytearray()
+        
+        print(pes.peek(32))
+        
+        if len(pes) <= 48 or pes.read(24) != b'\x00\x00\x01':
+            continue
+            
+        packet.update({
+            'stream_id': pes.read(8),
+            'packet_length': pes.read(16).uint,
+        })
+        
+        if pes.peek(2) == '0b10':
+            pes.read(2)
+            
+            packet.update({
+                'scrambling_control': pes.read(2),
+                'priority': pes.read(1).bool,
+                'data_alignment_indicator': pes.read(1).bool,
+                'copyright': pes.read(1).bool,
+                'original_or_copy': pes.read(1).bool,
+                'pts_dts_indicator': pes.read(2),
+                'escr_flag': pes.read(1).bool,
+                'es_rate_flag': pes.read(1).bool,
+                'dsm_trick_mode_flag': pes.read(1).bool,
+                'additional_copy_info_flag': pes.read(1).bool,
+                'crc_flag': pes.read(1).bool,
+                'extension_flag': pes.read(1).bool,
+                'pes_header_length': pes.read(8).uint,
+            })
+            
+            pes.read(8 * packet['pes_header_length'])
+            
+        packet.update({
+            'payload': pes.read('bytes'),
+        })
+        
+        print(repr(packet['payload'][:20]))
+                
+        #print(pes.read(8 * 4))
+    
+    # while len(data):
+        # packet = {}
+        
+        
+        # packet.update({
+            # 'stream_id': 
+        
+    
+            # try:
+            # while True:
+                #find the start of an MPEG PES
+                # idx = data.index(
+                # data = data[idx + 3:]
+
+                # check if the stream id is the siriusxm metadata id, 0xbf
+                # if (data[0] == 0xbf):
+                    # packet_length, subtype, count = struct.unpack('!xHxxxxBB', data[:9])
+                    # data = data[9:]
+
+                    # subtype FE is song info
+                    # if subtype == 0xfe:
+                        # els = []
+                        # for i in range(count):
+                            # length = data[0]
+                            # els.append(data[2 : length + 2])
+                            # data = data[length + 2:]
+                        # metadata = {
+                            # 'title': els[0].decode('utf-8'),
+                            # 'artist': els[1].decode('utf-8'),
+                            # 'album': els[2].decode('utf-8'),
+                            # }
+        # except ValueError:
+            # pass
+            
+        # return metadata
+
 
 def parse_transport_stream(data):
     data = data[data.index(b'G'):]
@@ -114,9 +203,13 @@ if __name__ == '__main__':
             elif packet['pid'] == 1024:
                 metadata += packet['payload']
 
-        with open('personal/metadata.bin', 'wb') as m, open('personal/aac.bin', 'wb') as a:
+        with open('personal/metadata_pes.bin', 'wb') as m, open('personal/audio_pes.bin', 'wb') as a:
             a.write(aac)
             m.write(metadata)
+            
+        parse_packetized_elementary_stream(aac)
+        print('so meta')
+        parse_packetized_elementary_stream(metadata)
 
         id3 = create_id3(pcr, 'title!', 'artist?')
         with open('personal/tagged.m4a', 'wb') as tag:

@@ -54,7 +54,7 @@ def media_segment(channel_number, segment):
     
     id3 = mpegutils.create_id3(pcr, 'Title', 'Artist')
     
-    return Response(id3 + aac, mimetype='application/octet-stream')
+    return Response(segment_data, mimetype='application/octet-stream')
 
 if __name__ == "__main__":
     cfg = configparser.ConfigParser()
