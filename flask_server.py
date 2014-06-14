@@ -44,7 +44,7 @@ def media_segment(channel_number, segment):
     metadata = bytearray()
     pcr = None
 
-    for packet in mpegparser.parse_transport_stream(segment_data):
+    for packet in mpegutils.parse_transport_stream(segment_data):
         if pcr == None and 'pcr_base' in packet:
             pcr = packet['pcr_base']
         if packet['pid'] == 768:
@@ -52,9 +52,9 @@ def media_segment(channel_number, segment):
         elif packet['pid'] == 1024:
             metadata += packet['payload']
     
-    id3 = mpegparser.create_id3(pcr, 'Title', 'Artist')
+    id3 = mpegutils.create_id3(pcr, 'Title', 'Artist')
     
-    return Response(id3 + aac, mimetype='audio/mp4')
+    return Response(id3 + aac, mimetype='application/octet-stream')
 
 if __name__ == "__main__":
     cfg = configparser.ConfigParser()
