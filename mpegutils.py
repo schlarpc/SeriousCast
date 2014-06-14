@@ -101,7 +101,7 @@ def create_id3(pcr, title, artist):
 
 
 if __name__ == '__main__':
-    with open('personal/area33_64k_1_061235739360_00252952.ts', 'rb') as f:
+    with open('personal/decrypted_segment.ts', 'rb') as f:
         aac = bytearray()
         metadata = bytearray()
         pcr = None
