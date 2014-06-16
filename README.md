@@ -16,9 +16,9 @@ It has dependencies on:
 * [Requests](http://docs.python-requests.org/en/latest/)
 * [Jinja2](http://jinja.pocoo.org/docs/)
 
-You can use `pip install -r requirements.txt` to install these packages,
-although Windows users may need to get an
-[OpenSSL binary](https://www.openssl.org/related/binaries.html).
+You can use `pip install -r requirements.txt` to install these packages. Windows users will need to
+get an [OpenSSL binary](https://www.openssl.org/related/binaries.html). Linux users will need the
+relevant packages installed to [build cryptography](https://cryptography.io/en/latest/installation/#building-cryptography-on-linux).
 
 An experimental HTTP Live Streaming server is being implemented using Flask, in `flask_server.py`.
 Flask is not required to run the SHOUTcast server.
