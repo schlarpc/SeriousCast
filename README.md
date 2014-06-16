@@ -9,7 +9,7 @@ using the VLC browser plugin.
 
 ## Requirements
 
-SeriousCast is written in Python, and more specifically targets Python 3.3.
+SeriousCast is written in Python 3.
 
 It has dependencies on:
 * [cryptography](https://cryptography.io/en/latest/)
@@ -20,7 +20,8 @@ You can use `pip install -r requirements.txt` to install these packages,
 although Windows users may need to get an
 [OpenSSL binary](https://www.openssl.org/related/binaries.html).
 
-Additionally, a (non-crippled) copy of ffmpeg is required for the stream muxing.
+An experimental HTTP Live Streaming server is being implemented using Flask, in `flask_server.py`.
+Flask is not required to run the SHOUTcast server.
 
 ## Setup
 
@@ -28,8 +29,6 @@ Make a copy of settings-example.cfg named settings.cfg.
 Replace the `username` and `password` fields with your SiriusXM credentials.
 The `hostname` field should be set to the publicly accessible hostname (or IP
 address) for your server.
-The `ffmpeg_path` field should reflect the location of your ffmpeg binary;
-if it's on the PATH you should be able to just use "`ffmpeg`".
 
 After editing the configuration file, you should be able to run `server.py`
 to start the service. Navigate to the configured port (default 30000) in a web
