@@ -45,7 +45,6 @@ $(function() {
             now_playing_last = now_playing;
         }
     }
-
     function change_art(title) {
         $.ajax({
             url: "https://itunes.apple.com/search?term="+encodeURI(title.replace( /[^a-zA-Z]/g, " ")),
@@ -160,9 +159,6 @@ $(function() {
         } else {
             $('#time').text(offset + ' min ago');
         }
-    });
-    
-    $('#player-rewind').mouseup(function() {
         if (current_channel !== undefined) {
             start_stream(url_base + '/channel/' + current_channel + '/' + offset);
         }
