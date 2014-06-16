@@ -14,6 +14,7 @@ import sys
 import logging
 import collections
 import time
+import math
 
 import jinja2
 
@@ -145,6 +146,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
         self.send_header('icy-url', url)
+        self.send_header('icy-metadata', '1')
         self.send_header('icy-metaint', '32768')
         self.end_headers()
 
@@ -172,15 +174,15 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                                 track_title = new_title
 
                     if len(audio) >= 32768:
-                        meta_title = "StreamTitle='" + track_title + "';"
-                        meta_length = -(-len(meta_title) // 16)
-                        meta_title = meta_title.ljust(meta_length * 16).encode('utf-8')
+                        meta_title = ("StreamTitle='" + track_title.replace("'", '') + "';").encode('utf-8')
+                        meta_length = math.ceil(len(meta_title) / 16)
+                        meta_buffer = bytes((meta_length,)) + meta_title + (b'\x00' * ((meta_length * 16) - len(meta_title)))
                         audio_interval = audio[:32768]
                         del audio[:32768]
                         try:
                             self.wfile.write(audio_interval)
-                            self.wfile.write(bytes((meta_length,)))
-                            self.wfile.write(meta_title)
+                            self.wfile.write(meta_buffer)
+                            logging.debug('Metadata: ' + repr(meta_buffer))
                             if start_time != None and time.time() - start_time < 4:
                                 time.sleep(4 - (time.time() - start_time))
                             start_time = time.time()
