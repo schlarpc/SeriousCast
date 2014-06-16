@@ -176,9 +176,7 @@ class Sirius():
 
 
     def _channel_token(self, channel_key, invalidate=False):
-        """
-        Returns a 2-tuple that acts as a stream token
-        """
+        """Returns a 2-tuple that acts as a stream token"""
         if not invalidate and channel_key in self.token_cache:
             return self.token_cache[channel_key]
 
@@ -194,7 +192,6 @@ class Sirius():
             length = struct.unpack('<H', token_data[4:6])[0]
             channel_url, token = re.search('(.+?)\\?token=([a-f0-9_]+)',
                 token_data[6 : 6 + length].decode()).group(1, 2)
-
             self.token_cache[channel_key] = (channel_url, token)
             return self.token_cache[channel_key]
         else:
@@ -203,9 +200,7 @@ class Sirius():
 
 
     def _get_token_resource(self, channel_key, file):
-        """
-        Retrieves a token protected channel resource, returns response object
-        """
+        """Retrieves a token protected channel resource, returns response object"""
         channel_url, token = self._channel_token(channel_key)
         hq_path = channel_url + 'HLS_' + channel_key + '_64k/'
         resp = requests.get(hq_path + file, params={'token': token})
@@ -220,55 +215,33 @@ class Sirius():
 
 
     def get_playlist(self, channel_key):
-        """
-        Retrieve m3u8 playlist for a given channel
-        """
+        """Retrieve m3u8 playlist for a given channel"""
         resp = self._get_token_resource(channel_key, channel_key + '_64k_large.m3u8')
         return resp.text
 
 
     def get_segment(self, channel_key, segment):
-        """
-        Get a media segment from a channel, return decrypted as MPEG TS
-        """
+        """Get a media segment from a channel, return decrypted as MPEG TS"""
         resp = self._get_token_resource(channel_key, segment)
         segment = self._decrypt_packet(resp.content)
         return segment
 
 
-    def packet_generator(self, id, rewind=0):
-        """
-        Generator that produces AAC-HE audio in an MPEG-TS container
+    def packet_generator(self, channel_key, rewind=0):
+        """Generator that produces AAC-HE audio in an MPEG-TS container
         See also: HTTP Live Streaming
         Rewind specifies a number of minutes to go back in history
         """
-        channel_url, token = self._channel_token(id)
-
-        hq_url = channel_url + 'HLS_' + id + '_64k/'
-        playlist_url = hq_url + id + '_64k_large.m3u8'
         playlist = []
         entry = None
-
         while True:
             if len(playlist) < 3:
-                resp = requests.get(playlist_url, params={'token': token})
-                if resp.status_code == 200:
-                    new_entries = self._filter_playlist(resp.text, entry, rewind)
-                    playlist += [x for x in new_entries if x not in playlist]
-                else:
-                    logging.warning('Expired token, renewing')
-                    channel_url, token = self._channel_token(id, True)
-
+                resp = self.get_playlist(channel_key)
+                new_entries = self._filter_playlist(resp, entry, rewind)
+                playlist += [x for x in new_entries if x not in playlist]
             if len(playlist):
                 entry = playlist.pop(0)
                 logging.debug('Got audio chunk ' + entry)
-
-                resp = requests.get(hq_url + entry, params={'token': token})
-                if resp.status_code == 200:
-                    yield self._decrypt_packet(resp.content)
-                else:
-                    playlist.insert(0, entry)
-                    logging.warning('Expired token, renewing')
-                    channel_url, token = self._channel_token(id, True)
+                yield self.get_segment(channel_key, entry)
             else:
                 time.sleep(10)
