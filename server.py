@@ -199,11 +199,22 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         channel = self.sbe.sxm.lineup[channel_number]
         channel_id = str(channel['channelKey'])
         packet = next(self.sbe.sxm.packet_generator(channel_id, rewind))
-        metadata = self.extract_metadata(packet)
+        metadata = None
+
+        for pes_packet in mpegutils.parse_transport_stream(packet):
+            if pes_packet['pid'] == 1024:
+                for es_packet in mpegutils.parse_packetized_elementary_stream(pes_packet['payload']):
+                    new_meta = mpegutils.parse_sxm_metadata(es_packet['payload'])
+                    if not metadata and new_meta:
+                        metadata = new_meta
 
         response = json.dumps({
             'channel': channel,
-            'nowplaying': metadata,
+            'nowplaying': {
+                'artist': metadata[1],
+                'title': metadata[0],
+                'album': metadata[2],
+            },
         }, sort_keys=True, indent=4).encode('utf-8')
 
         self.send_standard_headers(len(response), {
