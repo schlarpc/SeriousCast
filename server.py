@@ -146,13 +146,13 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
         self.send_header('icy-url', url)
-        self.send_header('icy-metadata', '1')
         self.send_header('icy-metaint', '32768')
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
         track_title = ''
         start_time = None
+        new_meta = False
 
         audio = bytearray()
         for ts_packet in self.sbe.sxm.packet_generator(channel_id, rewind):
@@ -172,11 +172,15 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             if new_title != track_title:
                                 logging.info("Now playing: " + new_title)
                                 track_title = new_title
+                                new_meta = True
 
                     if len(audio) >= 32768:
-                        meta_title = ("StreamTitle='" + track_title.replace("'", '') + "';").encode('utf-8')
-                        meta_length = math.ceil(len(meta_title) / 16)
-                        meta_buffer = bytes((meta_length,)) + meta_title + (b'\x00' * ((meta_length * 16) - len(meta_title)))
+                        if new_meta:
+                            meta_title = ("StreamTitle='" + track_title.replace("'", '') + "';").encode('utf-8')
+                            meta_length = math.ceil(len(meta_title) / 16)
+                            meta_buffer = bytes((meta_length,)) + meta_title + (b'\x00' * ((meta_length * 16) - len(meta_title)))
+                        else:
+                            meta_buffer = b'\x00'
                         audio_interval = audio[:32768]
                         del audio[:32768]
                         try:
