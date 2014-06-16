@@ -150,9 +150,8 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         channel_id = str(channel['channelKey'])
         track_title = ''
 
+        audio = bytearray()
         for ts_packet in self.sbe.sxm.packet_generator(channel_id, rewind):
-            audio = bytearray()
-
             pes_streams = collections.defaultdict(bytearray)
             for pes_packet in mpegutils.parse_transport_stream(ts_packet):
                 if 'payload' in pes_packet:
