@@ -179,6 +179,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             meta_title = ("StreamTitle='" + track_title.replace("'", '') + "';").encode('utf-8')
                             meta_length = math.ceil(len(meta_title) / 16)
                             meta_buffer = bytes((meta_length,)) + meta_title + (b'\x00' * ((meta_length * 16) - len(meta_title)))
+                            new_meta = False
                         else:
                             meta_buffer = b'\x00'
                         audio_interval = audio[:32768]
