@@ -180,6 +180,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             meta_length = math.ceil(len(meta_title) / 16)
                             meta_buffer = bytes((meta_length,)) + meta_title + (b'\x00' * ((meta_length * 16) - len(meta_title)))
                             new_meta = False
+                            logging.debug('Metadata: ' + repr(meta_buffer))
                         else:
                             meta_buffer = b'\x00'
                         audio_interval = audio[:32768]
@@ -187,7 +188,6 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                         try:
                             self.wfile.write(audio_interval)
                             self.wfile.write(meta_buffer)
-                            logging.debug('Metadata: ' + repr(meta_buffer))
                             if start_time != None and time.time() - start_time < 4:
                                 time.sleep(4 - (time.time() - start_time))
                             start_time = time.time()
