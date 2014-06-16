@@ -181,9 +181,9 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             self.wfile.write(audio_interval)
                             self.wfile.write(bytes((meta_length,)))
                             self.wfile.write(meta_title)
-                            if start_time != None and time.time() - start < 4:
-                                time.sleep(4 - (time.time() - start))
-                            start = time.time()
+                            if start_time != None and time.time() - start_time < 4:
+                                time.sleep(4 - (time.time() - start_time))
+                            start_time = time.time()
                         except (ConnectionResetError, ConnectionAbortedError) as e:
                             logging.info('Connection dropped: ' + str(e))
                             return
