@@ -12,9 +12,12 @@ import mimetypes
 import json
 import sys
 import logging
+import collections
 
 import jinja2
+
 import sirius
+import mpegutils
 
 
 class Singleton(type):
@@ -33,7 +36,7 @@ class SeriousBackend(metaclass=Singleton):
 
         self._cfg = configparser.ConfigParser()
         self._cfg.read('settings.cfg')
-        
+
         self.sxm = sirius.Sirius()
         self.templates = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'), autoescape=True)
 
@@ -57,41 +60,9 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         super().__init__(*args, **kwargs)
 
 
-    def extract_metadata(self, data):
-        metadata = {'artist': '', 'title': '', 'album': ''}
-        
-        try:
-            while True:
-                # find the start of an MPEG PES
-                idx = data.index(b'\x00\x00\x01')
-                data = data[idx + 3:]
-
-                # check if the stream id is the siriusxm metadata id, 0xbf
-                if (data[0] == 0xbf):
-                    packet_length, subtype, count = struct.unpack('!xHxxxxBB', data[:9])
-                    data = data[9:]
-
-                    # subtype FE is song info
-                    if subtype == 0xfe:
-                        els = []
-                        for i in range(count):
-                            length = data[0]
-                            els.append(data[2 : length + 2])
-                            data = data[length + 2:]
-                        metadata = {
-                            'title': els[0].decode('utf-8'),
-                            'artist': els[1].decode('utf-8'),
-                            'album': els[2].decode('utf-8'),
-                            }
-        except ValueError:
-            pass
-            
-        return metadata
-
-
     def send_standard_headers(self, content_length, headers=None, response_code=200):
         logging.debug('HTTP {} [{}] ({} b)'.format(response_code, self.path, content_length))
-    
+
         self.protocol_version = 'HTTP/1.1'
         self.send_response_only(response_code)
         self.send_header('Connection', 'close')
@@ -173,40 +144,45 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('icy-name', channel['name'])
         self.send_header('icy-genre', channel['genre'])
         self.send_header('icy-url', url)
-        self.send_header('icy-metaint', '45000')
+        self.send_header('icy-metaint', '32768')
         self.end_headers()
 
         channel_id = str(channel['channelKey'])
-        last_title = None
+        track_title = ''
 
-        for packet in self.sbe.sxm.packet_generator(channel_id, rewind):
-            # extracting metadata from the stream packet
-            metadata = self.extract_metadata(packet)
-            stream_title = '{} - {}'.format(metadata['artist'], metadata['title']).replace("'", '')
-            meta_title = "StreamTitle='" + stream_title + "';"
-            meta_length = -(-len(meta_title) // 16)
-            meta_title = meta_title.ljust(meta_length * 16).encode('utf-8')
-            
-            if stream_title != last_title:
-                logging.info("Now playing: " + stream_title)
-                last_title = stream_title
+        for ts_packet in self.sbe.sxm.packet_generator(channel_id, rewind):
+            audio = bytearray()
 
-            # convert stream from mpeg ts to adts
-            command = [self.sbe.config('ffmpeg_path'),
-                '-i', 'pipe:0', '-y', '-map', '0:1', '-c:a', 'copy', '-f', 'adts', 'pipe:1']
-            proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            adts_data = proc.communicate(packet)[0]
-            adts_data += b'\0' * (180000 - len(adts_data))
+            pes_streams = collections.defaultdict(bytearray)
+            for pes_packet in mpegutils.parse_transport_stream(ts_packet):
+                if 'payload' in pes_packet:
+                    pes_streams[pes_packet['pid']].extend(pes_packet['payload'])
 
-            try:
-                # we split the packet up a bit so that we can get the metadata out faster
-                for i in range(4):
-                    self.wfile.write(adts_data[(45000 * i) : (45000 * (i + 1))])
-                    self.wfile.write(bytes((meta_length,)))
-                    self.wfile.write(meta_title)
-            except (ConnectionResetError, ConnectionAbortedError) as e:
-                logging.info('Connection dropped: ' + str(e))
-                return
+            for pid, pes_stream in pes_streams.items():
+                for es_packet in mpegutils.parse_packetized_elementary_stream(pes_stream):
+                    if pid == 768:
+                        audio.extend(es_packet['payload'])
+                    elif pid == 1024:
+                        metadata = mpegutils.parse_sxm_metadata(es_packet['payload'])
+                        if metadata:
+                            new_title = '{} - {}'.format(metadata[1], metadata[0])
+                            if new_title != track_title:
+                                logging.info("Now playing: " + new_title)
+                                track_title = new_title
+
+                    if len(audio) >= 32768:
+                        meta_title = "StreamTitle='" + track_title + "';"
+                        meta_length = -(-len(meta_title) // 16)
+                        meta_title = meta_title.ljust(meta_length * 16).encode('utf-8')
+                        audio_interval = audio[:32768]
+                        del audio[:32768]
+                        try:
+                            self.wfile.write(audio_interval)
+                            self.wfile.write(bytes((meta_length,)))
+                            self.wfile.write(meta_title)
+                        except (ConnectionResetError, ConnectionAbortedError) as e:
+                            logging.info('Connection dropped: ' + str(e))
+                            return
 
 
     def channel_metadata(self, channel_number, rewind=0):
@@ -283,14 +259,14 @@ if __name__ == '__main__':
         datefmt='%m/%d %H:%M',
         filename='seriouscast.log',
         filemode='w')
-        
+
     # Set up console logging output
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     console_format = logging.Formatter('%(levelname)s :: %(thread)-5d :: %(message)s')
     console.setFormatter(console_format)
     logging.getLogger('').addHandler(console)
-    
+
     # Disable (most) logging from requests
     requests_log = logging.getLogger("requests")
     requests_log.setLevel(logging.WARNING)
