@@ -13,6 +13,7 @@ import json
 import sys
 import logging
 import collections
+import time
 
 import jinja2
 
@@ -149,6 +150,7 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
 
         channel_id = str(channel['channelKey'])
         track_title = ''
+        start_time = None
 
         audio = bytearray()
         for ts_packet in self.sbe.sxm.packet_generator(channel_id, rewind):
@@ -179,6 +181,9 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
                             self.wfile.write(audio_interval)
                             self.wfile.write(bytes((meta_length,)))
                             self.wfile.write(meta_title)
+                            if start_time != None and time.time() - start < 4:
+                                time.sleep(4 - (time.time() - start))
+                            start = time.time()
                         except (ConnectionResetError, ConnectionAbortedError) as e:
                             logging.info('Connection dropped: ' + str(e))
                             return
