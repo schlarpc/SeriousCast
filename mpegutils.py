@@ -8,7 +8,10 @@ import bitstring
 
 
 def parse_packetized_elementary_stream(data):
-    pes = bitstring.ConstBitStream(data[data.index(b'\x00\x00\x01'):])
+    try:
+        pes = bitstring.ConstBitStream(data[data.index(b'\x00\x00\x01'):])
+    except ValueError:
+        return
 
     while pes.pos < len(pes):
         packet = {}
@@ -115,6 +118,22 @@ def parse_transport_stream(data):
         yield packet
 
 
+def parse_sxm_metadata(packet):
+    md = bitstring.ConstBitStream(packet)
+    if md.read(8) != '0x0f':
+        return
+    type = md.read(8)
+    count = md.read(8).uint
+    if type == '0xfe':
+        els = []
+        for i in range(count):
+            length = md.read(8).uint
+            index = md.read(8).uint
+            els.append(md.read(8 * length).bytes)
+        return [x.decode('utf-8') for x in els[:3]]
+    return None
+
+
 def synchsafe(n):
     bits28 = bitstring.BitArray('uint:28=' + str(n)).bin
     new_bits = '0b'
@@ -167,6 +186,9 @@ if __name__ == '__main__':
 
         for packet in parse_packetized_elementary_stream(audio):
             audio_adts += packet['payload']
+            
+        for packet in parse_packetized_elementary_stream(metadata):
+            print(parse_sxm_metadata(packet['payload']))
 
         open('personal/adts_from_mpegutils.adts', 'wb').write(audio_adts)
 
