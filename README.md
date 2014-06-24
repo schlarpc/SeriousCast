@@ -15,6 +15,7 @@ It has dependencies on:
 * [cryptography](https://cryptography.io/en/latest/)
 * [Requests](http://docs.python-requests.org/en/latest/)
 * [Jinja2](http://jinja.pocoo.org/docs/)
+* [bitstring](http://pythonhosted.org//bitstring/)
 
 You can use `pip install -r requirements.txt` to install these packages. Windows users will need to
 get an [OpenSSL binary](https://www.openssl.org/related/binaries.html). Linux users will need the
