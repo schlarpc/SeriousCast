@@ -5,6 +5,7 @@ import re
 import binascii
 import io
 import bitstring
+import pprint
 
 
 def parse_packetized_elementary_stream(data):
@@ -77,40 +78,44 @@ def parse_transport_stream(data):
         if packet['adaptation_field_exists']:
             packet.update({
                 'adaptation_field_length': ts.read(8).uint,
-                'discontinuity_indicator': ts.read(1).bool,
-                'random_access_indicator': ts.read(1).bool,
-                'elementary_stream_priority_indicator': ts.read(1).bool,
-                'pcr_flag': ts.read(1).bool,
-                'opcr_flag': ts.read(1).bool,
-                'splicing_point_flag': ts.read(1).bool,
-                'transport_private_data_flag': ts.read(1).bool,
-                'adaptation_field_extension_flag': ts.read(1).bool,
             })
 
-            if packet['pcr_flag']:
+            if packet['adaptation_field_length'] > 0:
                 packet.update({
-                    'pcr_base': ts.read(33).uint,
-                    'pcr_padding': ts.read(6).uint,
-                    'pcr_extension': ts.read(9).uint,
-                })
-            if packet['opcr_flag']:
-                packet.update({
-                    'opcr_base': ts.read(33).uint,
-                    'opcr_padding': ts.read(6).uint,
-                    'opcr_extension': ts.read(9).uint,
-                })
-            if packet['splicing_point_flag']:
-                packet.update({
-                    'splice_countdown': ts.read(8).uint,
+                    'discontinuity_indicator': ts.read(1).bool,
+                    'random_access_indicator': ts.read(1).bool,
+                    'elementary_stream_priority_indicator': ts.read(1).bool,
+                    'pcr_flag': ts.read(1).bool,
+                    'opcr_flag': ts.read(1).bool,
+                    'splicing_point_flag': ts.read(1).bool,
+                    'transport_private_data_flag': ts.read(1).bool,
+                    'adaptation_field_extension_flag': ts.read(1).bool,
                 })
 
-            remaining_length = packet['adaptation_field_length'] - (
-                1 +
-                6 * packet['pcr_flag'] +
-                6 * packet['opcr_flag'] +
-                1 * packet['splicing_point_flag'])
-            if remaining_length > 0:
-                ts.read(remaining_length * 8)
+                if packet['pcr_flag']:
+                    packet.update({
+                        'pcr_base': ts.read(33).uint,
+                        'pcr_padding': ts.read(6).uint,
+                        'pcr_extension': ts.read(9).uint,
+                    })
+                if packet['opcr_flag']:
+                    packet.update({
+                        'opcr_base': ts.read(33).uint,
+                        'opcr_padding': ts.read(6).uint,
+                        'opcr_extension': ts.read(9).uint,
+                    })
+                if packet['splicing_point_flag']:
+                    packet.update({
+                        'splice_countdown': ts.read(8).uint,
+                    })
+
+                remaining_length = packet['adaptation_field_length'] - (
+                    1 +
+                    6 * packet['pcr_flag'] +
+                    6 * packet['opcr_flag'] +
+                    1 * packet['splicing_point_flag'])
+                if remaining_length > 0:
+                    ts.read(remaining_length * 8)
 
         if packet['contains_payload']:
             packet['payload'] = ts.read('bytes')
@@ -166,32 +171,32 @@ def create_id3(pcr, title, artist):
 
 
 if __name__ == '__main__':
-    with open('personal/decrypted_segment.ts', 'rb') as f:
-        audio = bytearray()
-        metadata = bytearray()
-        pcr = None
+    for segment in ('537', '539',):
+        print(segment)
+        with open('testdata/' + segment + '.ts', 'rb') as f:
+            audio = bytearray()
+            metadata = bytearray()
+            pcr = None
 
-        for packet in parse_transport_stream(f.read()):
-            if pcr == None and 'pcr_base' in packet:
-                pcr = packet['pcr_base']
-            if packet['pid'] == 768:
-                audio += packet['payload']
-            elif packet['pid'] == 1024:
-                metadata += packet['payload']
+            for ts_packet in parse_transport_stream(f.read()):
+                if 'opcr_base' in ts_packet:
+                    print(ts_packet['opcr_base'])
+                if pcr == None and 'pcr_base' in ts_packet:
+                    pcr = ts_packet['pcr_base']
+                if ts_packet['pid'] == 768:
+                    audio += ts_packet['payload']
+                elif ts_packet['pid'] == 1024:
+                    metadata += ts_packet['payload']
 
-        open('personal/pes_metadata.bin', 'wb').write(metadata)
-        open('personal/pes_audio.bin', 'wb').write(audio)
+            open('testdata/' + segment + '-metadata-mpegutils.pes', 'wb').write(metadata)
+            open('testdata/' + segment + '-audio-mpegutils.pes', 'wb').write(audio)
 
-        audio_adts = bytearray()
+            audio_adts = bytearray()
 
-        for packet in parse_packetized_elementary_stream(audio):
-            audio_adts += packet['payload']
-            
-        for packet in parse_packetized_elementary_stream(metadata):
-            print(parse_sxm_metadata(packet['payload']))
+            for packet in parse_packetized_elementary_stream(audio):
+                audio_adts += packet['payload']
 
-        open('personal/adts_from_mpegutils.adts', 'wb').write(audio_adts)
+            for packet in parse_packetized_elementary_stream(metadata):
+                print(parse_sxm_metadata(packet['payload']))
 
-        id3 = create_id3(pcr, 'title!', 'artist?')
-        open('personal/tagged.m4a', 'wb').write(id3 + audio_adts)
-
+            open('testdata/' + segment + '-mpegutils.aac', 'wb').write(audio_adts)
