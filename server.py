@@ -2,11 +2,8 @@
 
 import http.server
 import socketserver
-import socket
-import subprocess
 import re
 import configparser
-import struct
 import os
 import mimetypes
 import json

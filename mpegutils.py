@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
 import struct
-import re
-import binascii
-import io
 import bitstring
-import pprint
 
 
 def parse_packetized_elementary_stream(data):

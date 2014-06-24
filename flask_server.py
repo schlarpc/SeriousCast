@@ -2,11 +2,7 @@
 
 from flask import Flask, Response
 import sirius
-import requests
-import subprocess
-import io
 import mpegutils
-import struct
 import configparser
 
 
