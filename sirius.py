@@ -181,7 +181,7 @@ class Sirius():
             return self.token_cache[channel_key]
 
         token_url = self.config.findall("./consumerConfig/config[@name='TokenBaseUrl']")[0].attrib['value']
-        resp = requests.get(token_url + '/en-us/json/v3/streaming/ump2/' + channel_key + '/', params = {
+        resp = requests.get('{}/en-us/json/v3/streaming/ump2/{}/'.format(token_url, channel_key), params = {
             'sessionId': self.session_id,
         }).text
 
@@ -202,7 +202,7 @@ class Sirius():
     def _get_token_resource(self, channel_key, file):
         """Retrieves a token protected channel resource, returns response object"""
         channel_url, token = self._channel_token(channel_key)
-        hq_path = channel_url + 'HLS_' + channel_key + '_64k/'
+        hq_path = '{}HLS_{}_64k/'.format(channel_url, channel_key)
         resp = requests.get(hq_path + file, params={'token': token})
         if resp.status_code == 200:
             return resp
@@ -216,7 +216,7 @@ class Sirius():
 
     def get_playlist(self, channel_key):
         """Retrieve m3u8 playlist for a given channel"""
-        resp = self._get_token_resource(channel_key, channel_key + '_64k_large.m3u8')
+        resp = self._get_token_resource(channel_key, str(channel_key) + '_64k_large.m3u8')
         return resp.text
 
 
