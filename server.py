@@ -77,6 +77,10 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
     def index(self):
         template = self.sbe.templates.get_template('list.html')
         channels = sorted(self.sbe.sxm.lineup.values(), key=lambda k: k['siriusChannelNo'])
+        for channel in channels:
+            filename = '{} - {}.pls'.format(channel['siriusChannelNo'], channel['name'])
+            filename = filename.encode('ascii', 'ignore').decode().replace(' ', '_')
+            channel['playlistName'] = filename
         html = template.render({'channels': channels})
         response = html.encode('utf-8')
 
@@ -228,30 +232,6 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(response)
 
 
-    def channel_playlist(self, channel_number):
-        channel_number = int(channel_number)
-
-        if channel_number not in self.sbe.sxm.lineup:
-            return self.file_not_found()
-
-        template = self.sbe.templates.get_template('playlist.pls')
-        playlist = template.render({'url': 'http://{}:{}/channel/{}'.format(
-            self.sbe.config('hostname'),
-            self.sbe.config('port'),
-            channel_number)})
-        response = playlist.encode('utf-8')
-
-        filename = '{} - {}.pls'.format(channel_number, self.sbe.sxm.lineup[channel_number]['name'])
-        filename = filename.encode('ascii', 'ignore').decode().replace(' ', '_')
-
-        self.send_standard_headers(len(response), {
-            'Content-type': 'audio/x-scpls',
-            'Content-disposition': 'attachment; filename="{}"'.format(filename),
-        })
-
-        self.wfile.write(response)
-
-
     def do_GET(self):
         routes = (
             (r'^/$', self.index),
@@ -260,7 +240,6 @@ class SeriousRequestHandler(http.server.BaseHTTPRequestHandler):
             (r'^/channel/(?P<channel_number>[0-9]+)/(?P<rewind>[0-9]+)$', self.channel_stream),
             (r'^/metadata/(?P<channel_number>[0-9]+)$', self.channel_metadata),
             (r'^/metadata/(?P<channel_number>[0-9]+)/(?P<rewind>[0-9]+)$', self.channel_metadata),
-            (r'^/playlist/(?P<channel_number>[0-9]+)$', self.channel_playlist),
         )
 
         for route_path, route_handler in routes:

@@ -15,13 +15,19 @@ $(function() {
     }
     rebuild_favorites();
 
-    if ($.cookie('volume') != undefined) {
-        vlc.audio.volume = parseInt($.cookie('volume'),10);
-        $('#player-volume').val(parseInt($.cookie('volume'),10));
-    } else {
-        vlc.audio.volume = 100;
+    if (vlc.audio !== undefined) {
+        if ($.cookie('volume') != undefined) {
+            vlc.audio.volume = parseInt($.cookie('volume'),10);
+            $('#player-volume').val(parseInt($.cookie('volume'),10));
+        } else {
+            vlc.audio.volume = 100;
+        }
     }
     
+    $('.channel-download').each(function() {
+        var pls = '[playlist]\nFile1=' + window.location.origin + '/channel/' + $(this).data('channel');
+        $(this).attr('href', 'data:audio/x-scpls;base64,' + btoa(pls));
+    });
     
     function start_stream(stream_url) {
         set_metadata('Retrieving info...', '');

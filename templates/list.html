@@ -50,7 +50,7 @@
                     <td class="button">
                         <a class="player-stream" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Stream"><img src="/static/img/plays.svg" alt="play" /></a>
                         <a class="channel-add" href="#" data-channel="{{ channel.siriusChannelNo }}" title="Add to Favorites"><img src="/static/img/plus.svg" alt="plus" /></a>
-                        <a href="/playlist/{{ channel.siriusChannelNo }}" title="Download"><img src="/static/img/arrow-down.svg" alt="download" /></a>
+                        <a class="channel-download" data-channel="{{ channel.siriusChannelNo }}" download="{{ channel.playlistName }}" target="_blank" title="Download"><img src="/static/img/arrow-down.svg" alt="download" /></a>
 
                     </td>
                     <td class="name">{{ channel.name }}</td>
