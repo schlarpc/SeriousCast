@@ -25,7 +25,7 @@ class SiriusException(Exception):
 
 
 class Sirius():
-    BASE_URL = 'https://www.siriusxm.com/player/'
+    BASE_URL = 'https://www.siriusxm.com/legacyplayer/'
     HARDWARE_ID = '00000000'
     ETHERNET_MAC = '0000CAFEBABE'
     KEY_LENGTH = 16
